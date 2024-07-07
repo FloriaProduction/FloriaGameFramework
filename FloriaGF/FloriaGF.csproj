@@ -1,0 +1,99 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+	<!-- GL.cs configuration options! -->
+
+	<!-- Profile: CORE/COMPAT -->
+	<!-- COMPAT not implemented yet -->
+	<OpenGLProfile>CORE</OpenGLProfile>
+
+	<!-- Version: Any valid OpenGL version from 1.0-4.6 -->
+	<OpenGLVersionMajor>4</OpenGLVersionMajor>
+	<OpenGLVersionMinor>6</OpenGLVersionMinor>
+
+	<!-- Defining exposed wrapper API (SAFE/UNSAFE/BOTH) -->
+	<!-- SAFE: Only safe functions are exposed -->
+	<!-- UNSAFE: Only unsafe functions are exposed -->
+	<!-- BOTH: Both safe and unsafe functions are exposed -->
+	<OpenGLWrapperAPI>BOTH</OpenGLWrapperAPI>
+
+	<!-- Defining constants for compile time availability of APIs -->
+	<DefineConstants>$(DefineConstants);OGL_V_$(OpenGLVersionMajor)_$(OpenGLVersionMinor);OGL_P_$(OpenGLProfile);OGL_WRAPPER_API_$(OpenGLWrapperAPI)</DefineConstants>
+	
+	  
+	<StartupObject>FloriaGF.AppGF</StartupObject>
+	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<SignAssembly>False</SignAssembly>
+	<PackageIcon>icon128.png</PackageIcon>
+	<Company>FloriaProduction</Company>
+	<Platforms>AnyCPU;x64</Platforms>
+
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IsPublishable>False</IsPublishable>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IsPublishable>False</IsPublishable>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotGLFW" Version="1.0.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="data\icons\icon128.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="data\icons\icon16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\icons\icon32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\icons\icon48.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\images\icon128.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\images\icon128_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\images\numbers.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\images\test.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\shaders\batch_fragment_shader.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="data\shaders\batch_vertex_shader.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
