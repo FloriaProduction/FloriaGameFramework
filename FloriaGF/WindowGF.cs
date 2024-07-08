@@ -94,9 +94,9 @@ namespace FloriaGF
         {
             WindowGF._batches.Remove(name);
         }
-        public static void getBatch(string name, out Batch batch)
+        public static Batch getBatch(string name)
         {
-            batch = WindowGF._batches[name];
+            return WindowGF._batches[name];
         }
         private static void _updateCamera()
         {

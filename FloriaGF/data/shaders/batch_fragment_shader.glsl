@@ -8,5 +8,7 @@ out vec4 color;
 
 void main()
 {
+	//color = vec4(0, 0, 1, 1);
+
 	color = texture(fs_texture, fs_texCoord);
 }

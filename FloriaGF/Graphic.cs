@@ -1,7 +1,6 @@
 ﻿//#define FLORIAGF_ENABLE_LOG_GRAPHIC
 
 using System;
-using DotGLFW;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using static DotGL.GL;
@@ -10,21 +9,14 @@ namespace FloriaGF
 {
     namespace Graphic 
     {
-        static class GraphicSettings
-        {
-            public const bool enable_log_create_and_terminate = false;
-        }
-
         class ShaderOpenGL
         {
             uint _id = 0;
-            string _source;
             int _shader_type;
             public ShaderOpenGL(int shader_type, string source, bool compile = true)
             {
                 this._shader_type = shader_type;
-                this._source = source;
-                if (compile) this.compile();
+                if (compile) this.compile(source);
             }
 
             ~ShaderOpenGL()
@@ -32,10 +24,10 @@ namespace FloriaGF
                 this.delete();
             }
 
-            public unsafe void compile()
+            public unsafe void compile(string source)
             {
                 this._id = glCreateShader(this.shader_type);
-                glShaderSource(this.id, this.source);
+                glShaderSource(this.id, source);
                 glCompileShader(this.id);
 
                 int status;
@@ -50,7 +42,6 @@ namespace FloriaGF
             public void delete()
             {
                 glDeleteShader(this.id);
-                this._id = 0;
             }
 
             public uint id
@@ -64,10 +55,6 @@ namespace FloriaGF
             public int shader_type
             {
                 get { return this._shader_type; }
-            }
-            public string source
-            {
-                get { return this._source; }
             }
         }
 
@@ -272,34 +259,8 @@ namespace FloriaGF
 
         class Texture
         {
-            static Dictionary<string, uint> _textures = new();
-
             uint _id;
-            public Texture(string animation_name)
-            {
-                if (!Texture._textures.ContainsKey(animation_name))
-                {
-                    Image img = ImagesGF.getCacheImage(animation_name);
-
-                    uint texture_id = glGenTexture();
-                    glBindTexture(GL_TEXTURE_2D, texture_id);
-
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.Width, img.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Pixels);
-                    glGenerateMipmap(GL_TEXTURE_2D);
-
-                    glBindTexture(GL_TEXTURE_2D, 0);
-
-                    Texture._textures[animation_name] = texture_id;
-                }
-
-                this._id = Texture._textures[animation_name];
-            }
+            public Texture() : this(new Image(1, 1, [0, 0, 0, 0])) { }
             public Texture(Image img)
             {
                 _id = glGenTexture();
@@ -318,7 +279,16 @@ namespace FloriaGF
             }
             ~Texture()
             {
-                //glDeleteTextures(this._id);
+                glDeleteTextures(this._id);
+            }
+            public void update(Image img)
+            {
+                glBindTexture(GL_TEXTURE_2D, _id);
+
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.Width, img.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Pixels);
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                glBindTexture(GL_TEXTURE_2D, 0);
             }
 
             public uint id
@@ -328,7 +298,7 @@ namespace FloriaGF
         }
     
         class Batch
-        {
+        {            
             VBO _points;
             VBO _tex_coords;
 
@@ -336,14 +306,17 @@ namespace FloriaGF
 
             uint[] _indices;
 
-            Dictionary<string, uint[]> _animation_positions;
-            Image _image;
             Texture _texture;
 
             ShaderProgramOpenGL _program;
 
             Dictionary<uint, Sprite> _sprites = new();
             uint _currect_sprite_id = 0;
+
+            List<string> _animation_list = [];
+            Dictionary<string, uint> _animation_count = new();
+            Dictionary<string, uint[]> _animation_map = new();
+            uint _image_width, _image_height;
 
             bool _update_all = false;
 
@@ -359,7 +332,7 @@ namespace FloriaGF
                 _vao.attachVBO(_points, 3, 0);
                 _vao.attachVBO(_tex_coords, 2, 1);
 
-                _texture = new Texture("test");
+                _texture = new Texture();
 
                 _indices = [];
 
@@ -371,9 +344,13 @@ namespace FloriaGF
                 WindowGF.addBatch(name, this);
                 _name = name;
             }
+            ~Batch()
+            {
+                WindowGF.deleteBatch(this.name);
+            }
 
 
-            public void updateAll()
+            private void updateAll()
             {
                 this.updatePoints();
                 this.updateTexCoords();
@@ -381,7 +358,7 @@ namespace FloriaGF
 
                 _update_all = false;
             }
-            public void updatePoints()
+            private void updatePoints()
             {
                 _points.update((from sprite in _sprites.Values select sprite.points).SelectMany(a => a).ToArray());
             }
@@ -392,63 +369,41 @@ namespace FloriaGF
 
                 _points.update(_sprites[id].points, index*12);
             }
-            public void updateTexCoords()
+            private void updateTexCoords()
             {
-                int back_width = 0, back_height = 0;
-
-                foreach (var sprite in _sprites.Values)
-                {
-                    if (sprite.animation.image.Width > back_width)
-                        back_width = sprite.animation.image.Width;
-                    back_height += sprite.animation.image.Height;
-                }
-
-                Image background = new(back_width, back_height, new Color(0, 0, 0, 0));
-                int last_y = 0;
-                Dictionary<string, uint[]> animation_positions = new();
+                 float[] tex_coords = [1, 0, 1, 1, 0, 1, 0, 0];
+                _tex_coords.update((from sprite in _sprites.Values select tex_coords).SelectMany(a => a).ToArray());
                 
                 foreach (var sprite in _sprites.Values)
-                {
-                    background.paste(sprite.animation.image, 0, last_y);
-                    animation_positions[sprite.animation.name] = [0, (uint)last_y];
-                    last_y += sprite.animation.image.Height;
-                }
-
-                _animation_positions = animation_positions;
-                _image = background;
-                _texture = new Texture(_image);
-
-                // ru, rd, ld, lu
-                float[] tex_coords = [1, 0, 1, 1, 0, 1, 0, 0];
-                _tex_coords.update((from sprite in _sprites.Values select tex_coords).SelectMany(a => a).ToArray());
-
-                foreach (var id in _sprites.Keys)
-                {
-                    updateTexCoords(id);
-                }
-
-                _image.save("background.png");
-
+                    this.updateTexCoords(sprite.id);
             }
             public void updateTexCoords(uint id)
             {
-                Sprite sprite = _sprites[id];
                 int index = Array.IndexOf(_sprites.Keys.ToArray(), id);
                 if (index < 0) return;
 
-                uint[] animation_position = _animation_positions[sprite.animation.name];
-                uint[] frame_tex_coords = sprite.animation.getPixelTexCoords();
+                Sprite sprite = _sprites[id];
 
-                float[] animation_tex_coords = [
-                    (float)(animation_position[0] + frame_tex_coords[2])/_image.Width,  (float)animation_position[1]/_image.Height,
-                    (float)(animation_position[0] + frame_tex_coords[2])/_image.Width, (float)(animation_position[1] + frame_tex_coords[3])/_image.Height,
-                     (float)(animation_position[0] + frame_tex_coords[0])/_image.Width,                     (float)(animation_position[1] + frame_tex_coords[3])/_image.Height,
-                     (float)(animation_position[0] + frame_tex_coords[0])/_image.Width,                     (float)animation_position[1]/_image.Height,
+                uint[] animation_position = _animation_map[sprite.animation_name];
+                uint[] frame_position = sprite.frame_position;
+
+                float[] tex_coords = [
+                    (float)(animation_position[0] + frame_position[2])/_image_width,
+                    (float)(animation_position[1])/_image_height,
+
+                    (float)(animation_position[0] + frame_position[2])/_image_width,
+                    (float)(animation_position[1] + frame_position[3])/_image_height,
+
+                    (float)(animation_position[0] + frame_position[0])/_image_width,
+                    (float)(animation_position[1] + frame_position[3])/_image_height,
+
+                    (float)(animation_position[0] + frame_position[0])/_image_width,
+                    (float)(animation_position[1])/_image_height
                 ];
 
-                _tex_coords.update(animation_tex_coords, index*8);
+                _tex_coords.update(tex_coords, index*8);
             }
-            public void updateIndices()
+            private void updateIndices()
             {
                 List<uint> sp_indices = [];
 
@@ -464,6 +419,86 @@ namespace FloriaGF
 
                 _indices = sp_indices.ToArray();
             }
+           
+            public uint addSprite(Sprite sprite)
+            {
+                _sprites[_currect_sprite_id] = sprite;
+                _update_all = true;
+
+                return _currect_sprite_id++;
+            }
+            public void popSprite(uint id)
+            {
+                this.removeAnimation(_sprites[id].animation_name);
+                _sprites.Remove(id);
+                _update_all = true;
+            }
+            
+            private void generateAnimationMap()
+            {
+                uint back_width = 0, back_height = 0;
+                foreach (string animation_name in _animation_list)
+                {
+                    Image image = ImagesGF.getCacheImage(animation_name);
+                    if (image.Width > back_width)
+                        back_width = (uint)image.Width;
+                    back_height += (uint)image.Height;
+                }
+
+                Image animations = new(back_width, back_height, new Color(0, 0, 0, 0));
+                _image_width = back_width;
+                _image_height = back_height;
+
+                uint last_y = 0;
+                _animation_map.Clear();
+                foreach (string animation_name in _animation_list)
+                { 
+                    Image image = ImagesGF.getCacheImage(animation_name);
+                    animations.paste(image, 0, (int)last_y);
+                    _animation_map[animation_name] = [0, last_y];
+                    last_y += (uint)image.Height;
+                }
+
+                //animations.save($"batch-{this.name}_animations.png");
+
+                _texture.update(animations);
+
+                this.updateTexCoords();
+            }
+            public void addAnimation(string? name)
+            {
+                if (name == null) return;
+
+                if (_animation_list.IndexOf(name) != -1)
+                {
+                    _animation_count[name]++;
+                    return;
+                }
+
+                _animation_list.Add(name);
+
+                if (!_animation_count.ContainsKey(name))
+                    _animation_count[name] = 1;
+
+                this.generateAnimationMap();
+            }
+            public void removeAnimation(string? name)
+            {
+                if (name == null) return;
+
+                if (_animation_list.IndexOf(name) == -1) return;
+      
+                _animation_count[name]--;
+
+                if (_animation_count[name] == 0)
+                {
+                    _animation_list.Remove(name);
+                    _animation_count.Remove(name);
+                    _animation_map.Remove(name);
+                    this.generateAnimationMap();
+                }  
+            }
+
             public void render()
             {
                 if (_update_all) this.updateAll();
@@ -475,17 +510,6 @@ namespace FloriaGF
 
                 glUseProgram(this._program.id);
                 glDrawElements(GL_TRIANGLES, this._indices.Length, GL_UNSIGNED_INT, this._indices);
-            }
-            public uint addSprite(Sprite sprite)
-            {
-                _sprites[_currect_sprite_id] = sprite;
-                _update_all = true;
-                return _currect_sprite_id++;
-            }
-            public void popSprite(uint id)
-            {
-                _sprites.Remove(id);
-                _update_all = true;
             }
 
 
@@ -511,61 +535,6 @@ namespace FloriaGF
             }
         }
 
-        class Animation
-        {
-            string _name;
-            Image _image;
-            uint _currect_frame = 0, 
-                _count_frames,
-                _frame_size;
-
-            public Animation(string name, uint count_frames)
-            {
-                _name = name;
-                _image = ImagesGF.getCacheImage(name);
-
-                if (count_frames == 0) throw new Exception("Invalid count frames");
-                _count_frames = count_frames;
-
-                _frame_size = (uint)_image.Width / _count_frames;
-            }
-
-            public void nextFrame()
-            {
-                _currect_frame++;
-                if (_currect_frame >= _count_frames)
-                    _currect_frame = 0;
-            }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <returns>return 4 float in array, lu-rd</returns>
-            public uint[] getPixelTexCoords()
-            {
-                return [
-                    _currect_frame * _frame_size,
-                    0,
-                    _currect_frame * _frame_size + _frame_size,
-                    (uint)_image.Height
-                ];
-            }
-            public uint[] getAnimationSize()
-            {
-                return [_frame_size, (uint)_image.Height];
-            }
-
-
-            public string name
-            {
-                get { return _name; }
-            }
-            public Image image
-            {
-                get { return _image; }
-            }
-        }
-
         class Sprite
         {
             static Vec _points = new([1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0]);
@@ -578,24 +547,30 @@ namespace FloriaGF
 
             Batch _batch;
 
-            Animation _animation;
+            string? _animation_name;
+            uint _animation_count_frames, _animation_currect_frame = 0;
+            uint _animation_frame_width, _animation_frame_height;
+            ulong _animation_last_frame_time = 0, _animation_delay_time;
 
-            public Sprite(float x, float y, float z, float xs, float ys, float zs, string animation_name, uint count_frames, string batch_name)
+
+            public Sprite(float x, float y, float z, float xs, float ys, float zs, string animation_name, uint count_frames, uint delay, string batch_name)
             {
                 _translate = new Vec(x, y, z);
                 _scale = new Vec(xs, ys, zs);
 
-                WindowGF.getBatch(batch_name, out _batch);
+                _batch = WindowGF.getBatch(batch_name);
                 _id = _batch.addSprite(this);
 
-                _animation = new Animation(animation_name, count_frames);
+                this.setAnimation(animation_name, count_frames, delay);
             }
+            public Sprite(float x, float y, float z, float xs, float ys, float zs, Animation anim, string batch_name) : this(x, y, z, xs, ys, zs, anim.name, anim.count_frames, anim.delay, batch_name) { }
             ~Sprite()
             {
                 _batch.popSprite(this.id);
             }
 
-            private void updatePoints()
+
+            private void _updatePoints()
             {
                 _points_cache = null;
                 _batch.updatePoints(this.id);
@@ -603,19 +578,53 @@ namespace FloriaGF
             public void setPosition(float x, float y, float z)
             {
                 _translate = new Vec([x, y, z]);
-                this.updatePoints();
+                this._updatePoints();
             }
             public void setScale(float xs, float ys, float zs)
             {
                 _scale = new Vec([xs, ys, zs]);
-                this.updatePoints();
+                this._updatePoints();
             }
 
             public void nextFrame()
             {
-                _animation.nextFrame();
+                 _animation_currect_frame++;
+                if (_animation_currect_frame >= _animation_count_frames)
+                    _animation_currect_frame = 0;
+
                 _batch.updateTexCoords(_id);
             }
+            public void setAnimation(string animation_name, uint count_frames, uint delay)
+            {
+                string? last_anim_name = _animation_name;
+
+                _animation_name = animation_name;
+                _animation_count_frames = count_frames;
+                _animation_delay_time = delay;
+                _animation_currect_frame = 0;
+                var img = ImagesGF.getCacheImage(animation_name);
+                _animation_frame_width = (uint)img.Width / _animation_count_frames;
+                _animation_frame_height = (uint)img.Height;
+
+                _batch.addAnimation(animation_name);
+                _batch.removeAnimation(last_anim_name);
+            }
+            public void setAnimation(Animation anim)
+            {
+                this.setAnimation(anim.name, anim.count_frames, anim.delay);
+            }
+
+            public void simulation()
+            {
+                ulong ctime = TimeGF.time();
+
+                if (!(_animation_last_frame_time + _animation_delay_time > ctime || _animation_count_frames == 1 || _animation_delay_time == 0))
+                {
+                    this.nextFrame();
+                    _animation_last_frame_time = ctime;
+                }
+            }
+
 
             public uint id 
             { 
@@ -688,9 +697,34 @@ namespace FloriaGF
                     return _points_cache;
                 }
             }
-            public Animation animation
+            public uint[] frame_position
             {
-                get { return _animation; }
+                get
+                {
+                    return [
+                        _animation_currect_frame * _animation_frame_width,
+                        0,
+                        _animation_currect_frame * _animation_frame_width + _animation_frame_width,
+                        _animation_frame_height
+                    ];
+                }
+            }
+            public string animation_name
+            {
+                get { return _animation_name; }
+            }
+            public uint animation_currect_frame
+            {
+                get { return _animation_currect_frame; }
+                set
+                {
+                    if (value >= animation_count_frames) throw new Exception();
+                    _animation_currect_frame = value;
+                }
+            }
+            public uint animation_count_frames
+            {
+                get { return _animation_count_frames; }
             }
         }
     
@@ -742,7 +776,7 @@ namespace FloriaGF
         class Image
         {
             byte[] _pixels;
-            int _width, 
+            uint _width, 
                  _height;
 
             public Image()
@@ -751,7 +785,7 @@ namespace FloriaGF
                 _height = 0;
                 _pixels = [];
             }
-            public Image(int width, int height, byte[]? pixels = null)
+            public Image(uint width, uint height, byte[]? pixels = null)
             {
                 _width = width;
                 _height = height;
@@ -761,7 +795,7 @@ namespace FloriaGF
                 else
                     _pixels = pixels;
             }
-            public Image(int width, int height, Color color) : this(width, height) 
+            public Image(uint width, uint height, Color color) : this(width, height) 
             {
                 List<byte> data = new();
                 for (int i = 0; i < width * height; i++)
@@ -780,8 +814,8 @@ namespace FloriaGF
 
                 using (var image_data = SixLabors.ImageSharp.Image.Load<Rgba32>(path))
                 {
-                    _width = image_data.Width;
-                    _height = image_data.Height;
+                    _width = (uint)image_data.Width;
+                    _height = (uint)image_data.Height;
 
                     for (int y = 0; y < _height; y++)
                         for (int x = 0; x < _width; x++)
@@ -835,11 +869,11 @@ namespace FloriaGF
 
             public int Width
             {
-                get { return _width; }
+                get { return (int)_width; }
             }
             public int Height
             {
-                get { return _height; }
+                get { return (int)_height; }
             }
             public byte[] Pixels
             {
@@ -849,7 +883,7 @@ namespace FloriaGF
 
             public static implicit operator Image(DotGLFW.Image img)
             {
-                return new Image(img.Width, img.Height, img.Pixels);
+                return new Image((uint)img.Width, (uint)img.Height, img.Pixels);
             }
             public static implicit operator DotGLFW.Image(Image img)
             {
@@ -859,6 +893,18 @@ namespace FloriaGF
                 rimg.Pixels = img.Pixels;
 
                 return rimg;
+            }
+        }
+    
+        class Animation
+        {
+            public string name;
+            public uint count_frames, delay;
+            public Animation(string name, uint count_frames, uint delay)
+            {
+                this.name = name;
+                this.count_frames = count_frames;
+                this.delay = delay;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿//#define DISABLE_ERROR
+﻿#define DISABLE_ERROR
 
 using System;
 using DotGLFW;
@@ -96,36 +96,22 @@ namespace FloriaGF
 
         public static void simulation()
         {
-            WindowGF.camera_position = new Vec(64, 32, 0);
+            WindowGF.camera_position = new Vec(32*1.1f, 16*1.1f, 0);
             WindowGF.camera_scale = 50;
+
+            var anim_test = new Animation("test", 1, 0);
+            var anim_numbers = new Animation("numbers", 10, 500);
 
             var batch = new Batch("test");
 
-            /*List<Sprite> sprites = new();
-
-            for (int x = 0; x < 128; x++)
+            List<Sprite> sprites = new();
+            for (int x = 0; x < 64; x++)
             {
-                for (int y = 0; y < 64; y++)
+                for (int y = 0; y < 32; y++)
                 {
-                    sprites.Add(new Sprite(0, 0, 0, 1, 1, 1, "test", "test"));
-                    sprites.Last().setPosition(
-                        x,
-                        y,
-                        0
-                    );
+                    sprites.Add(new Sprite(x*1.1f, y*1.1f, 0, 1, 1, 1, anim_numbers, "test"));
                 }
             }
-            sprites.Last().setScale(2, 2, 2);*/
-
-
-            var sprite = new Sprite(65, 32, 0, 1, 1, 1, "numbers", 10, "test");
-            var sprite2 = new Sprite(64, 32, 0, 1, 1, 1, "numbers", 10, "test");
-            var sprite3 = new Sprite(63, 32, 0, 1, 1, 1, "numbers", 10, "test");
-            var sprite4 = new Sprite(62, 32, 0, 1, 1, 1, "numbers", 10, "test");
-
-
-
-
 
             while (!Glfw.WindowShouldClose(WindowGF.window))
             {
@@ -134,20 +120,18 @@ namespace FloriaGF
                 {
                     Glfw.PollEvents();
 
-                    /*sprites.Last().setPosition(
-                        (float)(Math.Cos(TimeGF.time() * 0.001)),
-                        (float)(Math.Sin(TimeGF.time() * 0.001)),
-                        0
-                    );*/
+                    foreach (var sprite in sprites)
+                    {
+                        sprite.simulation();
+                    }
 
-                    if (TimeGF.every("sprite_animation", 10))
-                        sprite.nextFrame();
-                    if (TimeGF.every("sprite2_animation", 100))
-                        sprite2.nextFrame();
-                    if (TimeGF.every("sprite3_animation", 1000))
-                        sprite3.nextFrame();
-                    if (TimeGF.every("sprite4_animation", 10000))
-                        sprite4.nextFrame();
+                    if (TimeGF.every("spritanim", 500))
+                    {
+                        if (sprites.Last().animation_name == "test")
+                            sprites.Last().setAnimation(anim_numbers);
+                        else
+                            sprites.Last().setAnimation(anim_test);
+                    }
 
                     _count_sps++;
                 }
