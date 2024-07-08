@@ -118,8 +118,11 @@ namespace FloriaGF
             sprites.Last().setScale(2, 2, 2);*/
 
 
-            var sprite = new Sprite(64, 32, 0, 1, 1, 1, "numbers", 10, "test");
-            var sprite2 = new Sprite(65, 32, 0, 1, 1, 1, "test", 1, "test");
+            var sprite = new Sprite(65, 32, 0, 1, 1, 1, "numbers", 10, "test");
+            var sprite2 = new Sprite(64, 32, 0, 1, 1, 1, "numbers", 10, "test");
+            var sprite3 = new Sprite(63, 32, 0, 1, 1, 1, "numbers", 10, "test");
+            var sprite4 = new Sprite(62, 32, 0, 1, 1, 1, "numbers", 10, "test");
+
 
 
 
@@ -139,7 +142,12 @@ namespace FloriaGF
 
                     if (TimeGF.every("sprite_animation", 10))
                         sprite.nextFrame();
-                    sprite.y = 32 + (float)Math.Sin(TimeGF.time() * 0.001);
+                    if (TimeGF.every("sprite2_animation", 100))
+                        sprite2.nextFrame();
+                    if (TimeGF.every("sprite3_animation", 1000))
+                        sprite3.nextFrame();
+                    if (TimeGF.every("sprite4_animation", 10000))
+                        sprite4.nextFrame();
 
                     _count_sps++;
                 }
