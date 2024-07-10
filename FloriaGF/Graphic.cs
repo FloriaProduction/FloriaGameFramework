@@ -310,8 +310,7 @@ namespace FloriaGF
 
             ShaderProgramOpenGL _program;
 
-            Dictionary<uint, Sprite> _sprites = new();
-            uint _currect_sprite_id = 0;
+            IDM<Sprite> _sprites = new(true);
 
             List<string> _animation_list = [];
             Dictionary<string, uint> _animation_count = new();
@@ -422,16 +421,22 @@ namespace FloriaGF
            
             public uint addSprite(Sprite sprite)
             {
-                _sprites[_currect_sprite_id] = sprite;
                 _update_all = true;
+                return _sprites.add(sprite);
 
-                return _currect_sprite_id++;
+                /*_sprites[_currect_sprite_id] = sprite;
+                
+
+                return _currect_sprite_id++;*/
             }
             public void popSprite(uint id)
             {
-                this.removeAnimation(_sprites[id].animation_name);
-                _sprites.Remove(id);
                 _update_all = true;
+                this.removeAnimation(_sprites[id].animation_name);
+                _sprites.remove(id);
+
+                /*_sprites.Remove(id);
+                _update_all = true;*/
             }
             
             private void generateAnimationMap()
