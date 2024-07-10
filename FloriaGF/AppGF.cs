@@ -1,4 +1,4 @@
-﻿#define DISABLE_ERROR
+﻿//#define DISABLE_ERROR
 
 using System;
 using DotGLFW;
@@ -19,15 +19,6 @@ namespace FloriaGF
         public static int Main()
         {
 
-            /*var background = new Graphic.Image(256, 256, new Color([255, 0, 0, 255]));
-            var img = new Graphic.Image("data/images/test.png");
-
-            background.paste(img, 32, 32);
-
-            background.save("data/images/test_e.png");
-
-            return 0;*/
-
 
 #if DISABLE_ERROR
             try
@@ -35,7 +26,7 @@ namespace FloriaGF
                 try
                 {
 #endif
-                    AppGF.init();
+            AppGF.init();
                     AppGF.simulation();
 
 #if DISABLE_ERROR
