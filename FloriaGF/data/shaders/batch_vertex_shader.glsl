@@ -14,7 +14,7 @@ void main()
 {
     fs_texCoord = vs_texCoord;
     gl_Position = vec4(
-        (vs_position - camera_position) * camera_scale * vec3(2.0, -2.0, 2.0),
+        (vs_position - camera_position) * camera_scale * vec3(2.0, -2.0, 2.0) / vec3(1.0, 1.0, 1000.0),
         1.0
     );
 }

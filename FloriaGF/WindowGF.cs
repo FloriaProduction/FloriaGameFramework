@@ -53,10 +53,10 @@ namespace FloriaGF
 
             //glViewport(-(int)width/2, -(int)height/2, (int)width, -(int)(height));
 
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);
+            /*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);*/
 
-            glEnable(GL_DEPTH);
+            glEnable(GL_DEPTH_TEST);
 
             glActiveTexture(GL_TEXTURE0);
 
@@ -76,7 +76,7 @@ namespace FloriaGF
         {
             if (WindowGF._update_camera) WindowGF._updateCamera();
 
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             foreach (Batch batch in WindowGF._batches.Values)
             {

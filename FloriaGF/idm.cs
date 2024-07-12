@@ -1,104 +1,110 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FloriaGF
 {
+    /// <summary>
+    /// IDM - id manager
+    /// </summary>
     class IDM<T>
     {
-        bool reuse;
-        uint counter = 0;
-        Dictionary<uint, T?> dict = new();
-        uint[]? keys_cache;
+        bool _reuse;
+        uint _counter = 0;
+        Dictionary<uint, T?> _dict = new();
+        uint[]? _keys_cache;
+        uint? _dict_count;
 
-        public IDM(bool reuse)
+        public IDM(bool reuse = false)
         {
-            this.reuse = reuse;
+            this._reuse = reuse;
         }
 
         public uint add(T obj)
         {
             if (obj == null) throw new Exception("");
 
-            keys_cache = null;
+            _keys_cache = null;
+            _dict_count = null;
 
             uint? tkey = null;
 
-            if (reuse)
-                foreach (var key in dict.Keys)
-                    if (dict[key] == null)
+            if (_reuse)
+                foreach (var key in _dict.Keys)
+                    if (_dict[key] == null)
                     {
                         tkey = key;
                         break;
                     }
 
-            if (!reuse || !tkey.HasValue)
+            if (!_reuse || !tkey.HasValue)
             {
-                dict[counter] = obj;
-                return counter++;
+                _dict[_counter] = obj;
+                return _counter++;
             }
             else
             {
-                dict[(uint)tkey] = obj;
+                _dict[(uint)tkey] = obj;
                 return (uint)tkey;
             }
         }
         public void remove(uint id)
         {
-            keys_cache = null;
+            _keys_cache = null;
+            _dict_count = null;
 
-            if (reuse)
-                dict[id] = default;
+            if (_reuse)
+                _dict[id] = default;
             else
-                dict.Remove(id);
+                _dict.Remove(id);
         }
         public T get(uint id)
         {
-            return dict[id] ?? throw new Exception();
+            return _dict[id] ?? throw new Exception();
         }
         public uint[] getKeys()
         {
-            if (keys_cache == null)
+            if (_keys_cache == null)
             {
                 List<uint> keys = [];
 
-                if (reuse)
+                if (_reuse)
                 {
-                    foreach (var key in dict.Keys)
-                        if (dict[key] != null)
+                    foreach (var key in _dict.Keys)
+                        if (_dict[key] != null)
                             keys.Add(key);
                 }
-                else keys.AddRange(dict.Keys);
+                else keys.AddRange(_dict.Keys);
 
                 //if (sorted) keys.Sort();
 
-                keys_cache = keys.ToArray();
+                _keys_cache = keys.ToArray();
             }
 
-            return keys_cache;
+            return _keys_cache;
         }
         public T[] getValues()
         {
-            if (reuse)
-                return (from id in this.getKeys() select dict[id]).ToArray();
+            if (_reuse)
+                return (from id in this.getKeys() select _dict[id]).ToArray();
             else 
-                return dict.Values.ToArray();
+                return [.._dict.Values];
         }
         public uint getCount()
         {
-            if (reuse)
+            if (_dict_count == null)
             {
-                uint count = 0;
-                foreach (var key in dict.Keys)
-                    if (dict[key] != null)
-                        count++;
-                return count;
+                if (_reuse)
+                {
+                    uint count = 0;
+                    foreach (var key in _dict.Keys)
+                        if (_dict[key] != null) count++;
+                    _dict_count = count;
+                }
+                else _dict_count = (uint)_dict.Count;
             }
-            else return (uint)dict.Count;
+
+            return (uint)_dict_count;
         }
+
 
         public uint[] Keys
         {
@@ -107,7 +113,6 @@ namespace FloriaGF
                 return getKeys();
             }
         }
-
         public T[] Values
         {
             get
@@ -122,6 +127,7 @@ namespace FloriaGF
                 return getCount();
             }
         }
+
 
         public T this[uint id]
         {

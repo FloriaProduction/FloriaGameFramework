@@ -88,6 +88,9 @@
     <None Update="data\images\test.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="data\images\test2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="data\shaders\batch_fragment_shader.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
