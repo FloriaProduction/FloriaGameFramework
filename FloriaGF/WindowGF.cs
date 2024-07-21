@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using DotGLFW;
 using FloriaGF.Graphic;
 using static DotGL.GL;
@@ -53,8 +54,8 @@ namespace FloriaGF
 
             //glViewport(-(int)width/2, -(int)height/2, (int)width, -(int)(height));
 
-            /*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);*/
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
 
             glEnable(GL_DEPTH_TEST);
 
@@ -87,6 +88,7 @@ namespace FloriaGF
         }
         public static void addBatch(string name, Batch batch)
         {
+            if (WindowGF._batches.ContainsKey(name)) throw new Exception();
             WindowGF._update_camera = true;
             WindowGF._batches[name] = batch;
         }
@@ -139,6 +141,12 @@ namespace FloriaGF
                 value ? screen.Height : (int)camera_resolution[1]
             );
             setInetval(Profile.sync);
+        }
+
+        public static void simulationBatches()
+        {
+            foreach (Batch batch in _batches.Values)
+                batch.simulationSprites();
         }
 
 

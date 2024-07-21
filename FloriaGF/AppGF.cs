@@ -66,6 +66,8 @@ namespace FloriaGF
             ImagesGF.loadImage("test2", "data/images/test2.png");
             ImagesGF.loadImage("icon128_2", "data/images/icon128_2.png");
             ImagesGF.loadImage("numbers", "data/images/numbers.png");
+            ImagesGF.loadImage("test_anim", "data/images/test_anim.png");
+            ImagesGF.loadImage("test_anim2", "data/images/test_anim2.png");
 
             Log.write("APP", "initialized");
         }
@@ -87,51 +89,13 @@ namespace FloriaGF
 
         public static void simulation()
         {
-            //WindowGF.camera_position = new Vec(32*1.1f, 16*1.1f, 0);
-            WindowGF.camera_position = new Vec(0, 0, 0);
-            WindowGF.camera_scale = 100;
-
-            var anim_test = new Animation("test", 1, 0, false);
-            var anim_test2 = new Animation("test2", 1, 0, false);
-            var anim_numbers = new Animation("numbers", 10, 750, true);
-
-            var batch = new Batch("tb");
-            var sprite = new Sprite(0, 0, 0, 1, 1, 1, anim_test, "tb");
-            var sprite2 = new Sprite(0.5f, 0, 1f, 1, 1, 1, anim_test2, "tb");
-            var sprite3 = new Sprite(-1, 0, 0, 1, 1, 1, anim_numbers, "tb");
-
-
-            /*var batch = new Batch("test");
-
-            List<Sprite> sprites = new();
-            for (int x = 0; x < 64; x++)
-            {
-                for (int y = 0; y < 32; y++)
-                {
-                    sprites.Add(new Sprite(x * 1.1f, y * 1.1f, 0, 1, 1, 1, anim_numbers, "test"));
-                }
-            }*/
-
-
-            //sprite2.setAnimation(anim_numbers);
-
             while (!Glfw.WindowShouldClose(WindowGF.window))
             {
                 // simulation
                 if (TimeGF.everyTick("APP_simulation", (double)1000 / Profile.sps)) 
                 {
                     Glfw.PollEvents();
-
-                    /*sprite2.y = (float)(Math.Sin(TimeGF.time() * 0.001));
-                    sprite2.z = (float)(Math.Sin(TimeGF.time() * 0.001));*/
-
-                    /*if (TimeGF.every("spritanim", 500))
-                    {
-                        if (sprites.Last().animation.name == "test")
-                            sprites.Last().setAnimation(anim_numbers);
-                        else
-                            sprites.Last().setAnimation(anim_test);
-                    }*/
+                    WindowGF.simulationBatches();
 
                     _count_sps++;
                 }
