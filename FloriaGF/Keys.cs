@@ -5,7 +5,7 @@ namespace FloriaGF
 {
     static class KeysGF
     {
-        static void keycallback(Window window, Keys key, int scancode, InputState action, ModifierKeys mods)
+        static void keycallback(Window window, DotGLFW.Key key, int scancode, InputState action, ModifierKey mods)
         {
             Log.write("keysgf", $"{key} {scancode} {action} {mods}");
 
@@ -30,9 +30,5 @@ namespace FloriaGF
         {
             Glfw.SetKeyCallback(window, keycallback);
         }
-
-
-        
-
     }
 }

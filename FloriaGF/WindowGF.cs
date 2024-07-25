@@ -9,7 +9,7 @@ namespace FloriaGF
     static class WindowGF
     {
         static Window _window;
-        static VideoMode _screen;
+        static Vidmode _screen;
         static DotGLFW.Monitor _monitor;
 
         static Vec _camera_position = new Vec(0, 0, 0);
@@ -30,10 +30,10 @@ namespace FloriaGF
             WindowGF._screen = Glfw.GetVideoMode(WindowGF.monitor);
             if (screen == null) throw new Exception("Screen is null!");
 
-            Glfw.WindowHint(Hint.Resizable, false);
-            Glfw.WindowHint(Hint.CenterCursor, true);
-            Glfw.WindowHint(Hint.DoubleBuffer, true);
-            Glfw.WindowHint(Hint.Visible, false);
+            Glfw.WindowHint(WindowHint.Resizable, false);
+            Glfw.WindowHint(WindowHint.CenterCursor, true);
+            Glfw.WindowHint(WindowHint.DoubleBuffer, true);
+            Glfw.WindowHint(WindowHint.Visible, false);
 
             WindowGF._window = Glfw.CreateWindow((int)width, (int)height, title, DotGLFW.Monitor.NULL, DotGLFW.Window.NULL);
             if (window == null) throw new Exception("Window is null!");
@@ -132,7 +132,7 @@ namespace FloriaGF
                 value ? screen.Width : (int)camera_resolution[0], 
                 value ? screen.Height : (int)camera_resolution[1], 
                 
-                Glfw.DontCare
+                0
             );
             glViewport(
                 0, 0, 
@@ -194,7 +194,7 @@ namespace FloriaGF
         {
             get { return WindowGF._window; }
         }
-        public static VideoMode screen
+        public static Vidmode screen
         {
             get { return WindowGF._screen; }
         }
