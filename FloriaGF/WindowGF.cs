@@ -12,7 +12,7 @@ namespace FloriaGF
         static VideoMode _screen;
         static DotGLFW.Monitor _monitor;
 
-        static Vec _camera_position = new Vec(0, 0);
+        static Vec _camera_position = new Vec(0, 0, 0);
         static Vec _camera_resolution = new Vec(1, 1);
         static float _camera_scale = 1;
 

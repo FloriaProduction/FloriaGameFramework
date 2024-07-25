@@ -54,8 +54,6 @@ namespace FloriaGF
 
         public static void init()
         {
-            //Thread.CurrentThread.Priority = ThreadPriority.Highest;
-
             Profile.load();
             WindowGF.init(854, 480, "FloriaGameFramework");
             
@@ -89,13 +87,28 @@ namespace FloriaGF
 
         public static void simulation()
         {
+
+            var batch = new Batch("test");
+
+            var anim = new Animation("test_anim", 2, 500, true);
+
+            var spriteobject = new ObjSprite(new Vec(0, 0, 0), anim, batch.name);
+
+            var camera = new Camera(new Vec(0, 0, 0));
+            camera.scale = 100;
+
+
             while (!Glfw.WindowShouldClose(WindowGF.window))
             {
                 // simulation
                 if (TimeGF.everyTick("APP_simulation", (double)1000 / Profile.sps)) 
                 {
                     Glfw.PollEvents();
+                    World.simulation();
                     WindowGF.simulationBatches();
+
+                    camera.x = (float)(Math.Sin(TimeGF.time() * 0.002));
+                    spriteobject.y = (float)(Math.Sin(TimeGF.time() * 0.001));
 
                     _count_sps++;
                 }
@@ -127,11 +140,11 @@ namespace FloriaGF
         }
         public static bool app_enable
         {
-            get { return _app_enable; }
+            get { return AppGF._app_enable; }
         }
         public static ulong start_time
         {
-            get { return _start_time; }
+            get { return AppGF._start_time; }
         }
     }
 }

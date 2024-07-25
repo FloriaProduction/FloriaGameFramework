@@ -266,8 +266,8 @@ namespace FloriaGF
         class Texture
         {
             uint _id;
-            public Texture() : this(new Image(1, 1, [0, 0, 0, 0])) { }
-            public Texture(Image img)
+            
+            public Texture()
             {
                 _id = glGenTexture();
                 glBindTexture(GL_TEXTURE_2D, _id);
@@ -278,10 +278,11 @@ namespace FloriaGF
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.Width, img.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Pixels);
-                glGenerateMipmap(GL_TEXTURE_2D);
-
                 glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            public Texture(Image img) : this()
+            {
+                this.update(img);
             }
             ~Texture()
             {
@@ -589,242 +590,6 @@ namespace FloriaGF
             }
         }
 
-        /*class Batchold
-        {            
-            VBO _points;
-            VBO _tex_coords;
-
-            VAO _vao;
-
-            uint[] _indices;
-
-            Texture _texture;
-
-            ShaderProgramOpenGL _program;
-
-            IDM<Sprite> _sprites = new(true);
-
-            List<string> _animation_list = [];
-            Dictionary<string, uint> _animation_count = new();
-            Dictionary<string, uint[]> _animation_map = new();
-            uint _image_width, _image_height;
-
-            bool _update_all = false;
-
-            string _name;
-
-
-            public Batchold(string name)
-            {
-                _points = new VBO([], GL_STREAM_DRAW);
-                _tex_coords = new VBO([], GL_STREAM_DRAW);
-
-                _vao = new VAO();
-                _vao.attachVBO(_points, 3, 0);
-                _vao.attachVBO(_tex_coords, 2, 1);
-
-                _texture = new Texture();
-
-                _indices = [];
-
-                _program = new ShaderProgramOpenGL(
-                    "data/shaders/batch_vertex_shader.glsl",
-                    "data/shaders/batch_fragment_shader.glsl"
-                ); 
-
-                //WindowGF.addBatch(name, this);
-                _name = name;
-            }
-            ~Batchold()
-            {
-                WindowGF.deleteBatch(this.name);
-            }
-
-
-            private void updateAll()
-            {
-                this.updatePoints();
-                this.updateTexCoords();
-                this.updateIndices();
-
-                _update_all = false;
-            }
-            private void updatePoints()
-            {
-                _points.update((from sprite in _sprites.Values select sprite.points).SelectMany(a => a).ToArray());
-            }
-            public void updatePoints(uint id)
-            {
-                int index = Array.IndexOf(_sprites.Keys.ToArray(), id);
-                if (index < 0) return;
-
-                //_points.update(_sprites[id].points, index*12);
-            }
-            private void updateTexCoords()
-            {
-                 float[] tex_coords = [1, 0, 1, 1, 0, 1, 0, 0];
-                _tex_coords.update((from sprite in _sprites.Values select tex_coords).SelectMany(a => a).ToArray());
-                
-                foreach (var sprite in _sprites.Values)
-                    this.updateTexCoords(sprite.id);
-            }
-            public void updateTexCoords(uint id)
-            {
-                int index = Array.IndexOf(_sprites.Keys.ToArray(), id);
-                if (index < 0) return;
-
-                Sprite sprite = _sprites[id];
-
-                uint[] animation_position = _animation_map[sprite.animation_name];
-                uint[] frame_position = sprite.frame_position;
-
-                float[] tex_coords = [
-                    (float)(animation_position[0] + frame_position[2])/_image_width,
-                    (float)(animation_position[1])/_image_height,
-
-                    (float)(animation_position[0] + frame_position[2])/_image_width,
-                    (float)(animation_position[1] + frame_position[3])/_image_height,
-
-                    (float)(animation_position[0] + frame_position[0])/_image_width,
-                    (float)(animation_position[1] + frame_position[3])/_image_height,
-
-                    (float)(animation_position[0] + frame_position[0])/_image_width,
-                    (float)(animation_position[1])/_image_height
-                ];
-
-                //_tex_coords.update(tex_coords, index*8);
-            }
-            private void updateIndices()
-            {
-                List<uint> sp_indices = [];
-
-                for (uint i = 0; i < _sprites.Count; i++)
-                    sp_indices.AddRange([
-                        0 + i*4,
-                        1 + i*4,
-                        3 + i*4,
-                        1 + i*4,
-                        2 + i*4,
-                        3 + i*4
-                    ]);
-
-                _indices = sp_indices.ToArray();
-            }
-           
-            public uint addSprite(Sprite sprite)
-            {
-                _update_all = true;
-                return _sprites.add(sprite);
-            }
-            public void popSprite(uint id)
-            {
-                _update_all = true;
-                this.removeAnimation(_sprites[id].animation_name);
-                _sprites.remove(id);
-            }
-            
-            private void generateAnimationMap()
-            {
-                uint back_width = 0, back_height = 0;
-                foreach (string animation_name in _animation_list)
-                {
-                    Image image = ImagesGF.getCacheImage(animation_name);
-                    if (image.Width > back_width)
-                        back_width = (uint)image.Width;
-                    back_height += (uint)image.Height;
-                }
-
-                Image animations = new(back_width, back_height, new Color(0, 0, 0, 0));
-                _image_width = back_width;
-                _image_height = back_height;
-
-                uint last_y = 0;
-                _animation_map.Clear();
-                foreach (string animation_name in _animation_list)
-                { 
-                    Image image = ImagesGF.getCacheImage(animation_name);
-                    animations.paste(image, 0, (int)last_y);
-                    _animation_map[animation_name] = [0, last_y];
-                    last_y += (uint)image.Height;
-                }
-
-                //animations.save($"batch-{this.name}_animations.png");
-
-                _texture.update(animations);
-
-                this.updateTexCoords();
-            }
-            public void addAnimation(string? name)
-            {
-                if (name == null) return;
-
-                if (_animation_list.IndexOf(name) != -1)
-                {
-                    _animation_count[name]++;
-                    return;
-                }
-
-                _animation_list.Add(name);
-
-                if (!_animation_count.ContainsKey(name))
-                    _animation_count[name] = 1;
-
-                this.generateAnimationMap();
-            }
-            public void removeAnimation(string? name)
-            {
-                if (name == null) return;
-
-                if (_animation_list.IndexOf(name) == -1) return;
-      
-                _animation_count[name]--;
-
-                if (_animation_count[name] == 0)
-                {
-                    _animation_list.Remove(name);
-                    _animation_count.Remove(name);
-                    _animation_map.Remove(name);
-                    this.generateAnimationMap();
-                }  
-            }
-
-            public void render()
-            {
-                if (_update_all) this.updateAll();
-
-                if (_indices.Length == 0) return;
-
-                glBindTexture(GL_TEXTURE_2D, this._texture.id);
-                glBindVertexArray(this._vao.id);
-
-                glUseProgram(this._program.id);
-                glDrawElements(GL_TRIANGLES, this._indices.Length, GL_UNSIGNED_INT, this._indices);
-            }
-
-
-            public float[] position
-            {
-                set 
-                {
-                    if (value.Length != 3) throw new Exception();
-                    _program.setUniform("camera_position", [value[0], value[1], value[2]]);
-                }
-            }
-            public float[] scale
-            { 
-                set
-                {
-                    if (value.Length != 3) throw new Exception();
-                    _program.setUniform("camera_scale", [value[0], value[1], value[2]]);
-                }
-            }
-            public string name
-            {
-                get { return _name; }
-            }
-        }
-*/
-
         interface BatchObject
         {
             public uint id { get; }
@@ -832,7 +597,6 @@ namespace FloriaGF
             public Animation animation { get; }
             public uint[] indices { get; }
             public void simulation();
-
         } 
     
         class Sprite : BatchObject
@@ -857,12 +621,13 @@ namespace FloriaGF
 
                 this.setAnimation(animation);
 
-                /*_animation = animation.Clone() as Animation ?? throw new Exception();*/
                 _animation_last_change = TimeGF.time();
 
                 _batch = WindowGF.getBatch(batch_name);
                 _id = _batch.addSprite(this);
             }
+            public Sprite(float x, float y, float z, Animation animation, string batch_name) : this(x, y, z, 1, 1, 1, animation, batch_name) { }
+            public Sprite(Vec pos, Animation animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
             ~Sprite()
             {
                 _batch.removeSprite(this.id);
