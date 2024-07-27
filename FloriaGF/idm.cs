@@ -3,7 +3,7 @@
 namespace FloriaGF
 {
     /// <summary>
-    /// IDM - id manager
+    /// IDM(id - менеджер)
     /// </summary>
     class IDM<T>
     {
@@ -13,6 +13,7 @@ namespace FloriaGF
         uint[]? _keys_cache;
         uint? _dict_count;
 
+        /// <param name="reuse">использовать старые id для новых объектов</param>
         public IDM(bool reuse = false)
         {
             this._reuse = reuse;

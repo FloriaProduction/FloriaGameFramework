@@ -5,12 +5,20 @@ using static DotGL.GL;
 
 namespace FloriaGF
 {
+    /// <summary>
+    /// Логи
+    /// </summary>
     static class Log
     {
         static List<string> _logs = new ();
         static bool _save_logs = true;
         static bool _enable_logs = true;
         public static bool with_error { get; set; } = false;
+        
+        /// <summary>
+        /// Вывести лог
+        /// </summary>
+        /// <param name="message">Сообщение</param>
         public static void write(string message)
         {
             string now = DateTime.Now.ToLongTimeString();
@@ -21,11 +29,19 @@ namespace FloriaGF
                 Console.WriteLine($"[{now}] {message}");
         }
 
+        /// <summary>
+        /// Вывести лог
+        /// </summary>
+        /// <param name="name">От кого</param>
+        /// <param name="message">Сообщение</param>
         public static void write(string name, string message) 
         {
             write($"{name.ToUpper()}: {message}");
         }
 
+        /// <summary>
+        /// Вывести StackTrace Ошибки
+        /// </summary>
         public static void write(Exception e)
         {
             string message = "ERROR!";
@@ -41,6 +57,9 @@ namespace FloriaGF
             write(message);
         }
 
+        /// <summary>
+        /// Сохранить логи в файлы
+        /// </summary>
         public static void save()
         {
             if (!_save_logs) return;
@@ -48,6 +67,5 @@ namespace FloriaGF
             DateTime now = DateTime.Now;
             FileGF.writeFile($"logs/{now.ToShortDateString().Replace('.', '-')} {now.ToLongTimeString().Replace(':', '_')}{(with_error ? " error" : "")}.log", string.Join('\n', _logs));
         }
-
     }
 }

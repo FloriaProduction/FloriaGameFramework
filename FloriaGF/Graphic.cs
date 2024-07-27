@@ -10,6 +10,9 @@ namespace FloriaGF
 {
     namespace Graphic 
     {
+        /// <summary>
+        /// Класс шейдера OpenGL
+        /// </summary>
         class ShaderOpenGL
         {
             uint _id = 0;
@@ -24,7 +27,11 @@ namespace FloriaGF
             {
                 this.delete();
             }
-
+            /// <summary>
+            /// Скопилировать шейдер
+            /// </summary>
+            /// <param name="source">GLSL-код шейдера</param>
+            /// <exception cref="Exception"></exception>
             public unsafe void compile(string source)
             {
                 this._id = glCreateShader(this.shader_type);
@@ -44,7 +51,6 @@ namespace FloriaGF
             {
                 glDeleteShader(this.id);
             }
-
             public uint id
             {
                 get { return this._id; }
@@ -59,18 +65,24 @@ namespace FloriaGF
             }
         }
 
+        /// <summary>
+        /// Шейдерная программа OpenGL
+        /// </summary>
         class ShaderProgramOpenGL
         {
             uint _id = 0;
             ShaderOpenGL _vertex_shader;
             ShaderOpenGL _fragment_shader;
-
-            public unsafe void compile()
+            /// <summary>
+            /// Скомплиировать шейдерную программу
+            /// </summary>
+            /// <exception cref="Exception"></exception>
+            public unsafe void compile(ShaderOpenGL vertex_shader, ShaderOpenGL fragment_shader)
             {
                 _id = glCreateProgram();
 
-                glAttachShader(this.id, this.vertex_shader.id);
-                glAttachShader(this.id, this.fragment_shader.id);
+                glAttachShader(this.id, vertex_shader.id);
+                glAttachShader(this.id, fragment_shader.id);
 
                 glLinkProgram(this.id);
 
@@ -99,7 +111,7 @@ namespace FloriaGF
                 this._vertex_shader = vertex_shader;
                 this._fragment_shader = fragment_shader;
 
-                if (compile) this.compile();
+                if (compile) this.compile(this.vertex_shader, this.fragment_shader);
             }
             public ShaderProgramOpenGL(string path_vertex_shader, string path_fragment_shader, bool compile = true) : this(new ShaderOpenGL(GL_VERTEX_SHADER, FileGF.readFile(path_vertex_shader)), new ShaderOpenGL(GL_FRAGMENT_SHADER, FileGF.readFile(path_fragment_shader)), compile){ }
             ~ShaderProgramOpenGL()
@@ -127,6 +139,9 @@ namespace FloriaGF
             }
 
             Dictionary<string, int> _cache_getUniformLocation = new();
+            /// <summary>
+            /// получить Location переменной в шейдерной программе
+            /// </summary>
             public int getUniformLocation(string name)
             {
                 glUseProgram(this.id);
@@ -135,7 +150,9 @@ namespace FloriaGF
 
                 return _cache_getUniformLocation[name];
             }
-
+            /// <summary>
+            /// Получить значение переменной из шейдерной программы
+            /// </summary>
             public unsafe float[] getUniformValues(string name, uint count_values)
             {
                 float[] values = new float[count_values];
@@ -144,7 +161,9 @@ namespace FloriaGF
 
                 return values;
             }
-
+            /// <summary>
+            /// Установить значение переменной name в шейдерной программе
+            /// </summary>
             public void setUniform(string name, float value)
             {
                 glUniform1f(getUniformLocation(name), value);
@@ -187,6 +206,9 @@ namespace FloriaGF
             }
         }
 
+        /// <summary>
+        /// vertex buffer object - проще говоря массив данных
+        /// </summary>
         class VBO
         {
             uint _id;
@@ -205,6 +227,11 @@ namespace FloriaGF
                 glDeleteBuffers(this.id);
             }
 
+            /// <summary>
+            /// Обновить(установить) значения vbo 
+            /// </summary>
+            /// <param name="data">Данные</param>
+            /// <param name="index">Если не null, обновляется часть массива</param>
             public unsafe void update(float[] data, uint? index = null)
             {
                 glBindBuffer(GL_ARRAY_BUFFER, this._id);
@@ -233,6 +260,9 @@ namespace FloriaGF
             }
         }
 
+        /// <summary>
+        /// vertex attrib object - совокупность vbo с настройками
+        /// </summary>
         class VAO
         {
             uint _id;
@@ -245,7 +275,13 @@ namespace FloriaGF
             {
                 glDeleteVertexArrays(this.id);
             }
-
+            /// <summary>
+            /// Включить vbo в vao
+            /// </summary>
+            /// <param name="vbo">Сам VBO объект</param>
+            /// <param name="size">Количество чисел на 1 вершину</param>
+            /// <param name="location">Location для VBO</param>
+            /// <param name="type">Тип значений VBO</param>
             public void attachVBO(VBO vbo, int size, uint location, int type = GL_FLOAT)
             {
                 glBindVertexArray(this.id);
@@ -263,6 +299,9 @@ namespace FloriaGF
             }
         }
 
+        /// <summary>
+        /// Текстура
+        /// </summary>
         class Texture
         {
             uint _id;
@@ -288,6 +327,9 @@ namespace FloriaGF
             {
                 glDeleteTextures(this._id);
             }
+            /// <summary>
+            /// Обновление происходит для всей текстуры
+            /// </summary>
             public void update(Image img)
             {
                 glBindTexture(GL_TEXTURE_2D, _id);
@@ -304,6 +346,9 @@ namespace FloriaGF
             }
         }
         
+        /// <summary>
+        /// Используется для пакетной отрисовки множества спрайтов
+        /// </summary>
         class Batch
         {
             VBO _points, _tex_coords;
@@ -328,7 +373,7 @@ namespace FloriaGF
             bool _update_animations = false;
 
             string _name;
-
+            /// <param name="name">Уникальное имя для Batch, используется в роли уникального индетификатора</param>
             public Batch(string name)
             {
                 _points = new VBO([], GL_STREAM_DRAW);
@@ -357,41 +402,11 @@ namespace FloriaGF
             {
                 _update_all = true;
                 return _sprites.add(sprite);
-
-               /* uint count_points = (uint)sprite.points.Length;
-                uint count_tex_coords = (uint)sprite.animation.frame_position.Length;
-
-                uint id = _sprites.add(sprite);
-
-                if (_sprites_indices.Count == 0)
-                    _sprites_indices[id] = [0, 0, count_points, count_tex_coords];
-                else
-                {
-                    uint[] li = _sprites_indices.Last().Value;
-                    _sprites_indices[id] = [
-                        li[0] + li[2],
-                        li[1] + li[3],
-                        count_points,
-                        count_tex_coords,
-                    ];
-                }
-
-                this.addAnimation(sprite.animation.name);
-
-                _update_all = true;
-
-                return id;*/
             }
             public void removeSprite(uint id)
             {
                 _update_all = true;
                 _sprites.remove(id);
-
-                /*_sprites_indices.Remove(id);
-                this.removeAnimation(_sprites[id].animation.name);
-                _sprites.remove(id);
-
-                _update_all = true;*/
             }
             
             private void generationSpriteIndices()
@@ -526,11 +541,16 @@ namespace FloriaGF
 
                 _update_all = false;
             }
+            /// <summary>
+            /// Обновить общую текстуру
+            /// </summary>
             public void updateAnimations()
             {
                 _update_animations = true;
             }
-            
+            /// <summary>
+            /// Просимулировать все спрайты, используемые этим Batch
+            /// </summary>
             public void simulationSprites()
             {
                 foreach (BatchObject sprite in _sprites.Values)
@@ -550,11 +570,13 @@ namespace FloriaGF
                 glDrawElements(GL_TRIANGLES, this._indices.Length, GL_UNSIGNED_INT, this._indices);
             }
 
-
             public string name
             {
                 get { return _name; }
             }
+            /// <summary>
+            /// Vec(3) Глобальная позиция для Batch, изменения затронут все Спрайты в этом Batch
+            /// </summary>
             public Vec position
             {
                 get
@@ -568,6 +590,9 @@ namespace FloriaGF
                     _program.setUniform("camera_position", [value[0], value[1], value[2]]);
                 }
             }
+            /// <summary>
+            /// Vec(3) Глобальное растяжение для Batch, изменения затронут все Спрайты в этом Batch
+            /// </summary>
             public Vec scale
             {
                 get
@@ -581,6 +606,7 @@ namespace FloriaGF
                     _program.setUniform("camera_scale", [value[0], value[1], value[2]]);
                 }
             }
+            
             public ShaderProgramOpenGL program
             {
                 get
@@ -590,6 +616,9 @@ namespace FloriaGF
             }
         }
 
+        /// <summary>
+        /// Простой интерфейс объектов для Batch
+        /// </summary>
         interface BatchObject
         {
             public uint id { get; }
@@ -598,7 +627,10 @@ namespace FloriaGF
             public uint[] indices { get; }
             public void simulation();
         } 
-    
+        
+        /// <summary>
+        /// Спрайт
+        /// </summary>
         class Sprite : BatchObject
         {
             static Vec _points = new([1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0]);
@@ -613,7 +645,14 @@ namespace FloriaGF
 
             Animation _animation;
             ulong _animation_last_change;
-
+            /// <param name="x">X - координата</param>
+            /// <param name="y">Y - координата</param>
+            /// <param name="z">Z - координата</param>
+            /// <param name="xs">X - растяжение</param>
+            /// <param name="ys">Y - растяжение</param>
+            /// <param name="zs">Z - растяжение</param>
+            /// <param name="animation">Анимация для спрайта</param>
+            /// <param name="batch_name">Имя Batch</param>
             public Sprite(float x, float y, float z, float xs, float ys, float zs, Animation animation, string batch_name)
             {
                 this.setPosition(x, y, z, false);
@@ -626,7 +665,21 @@ namespace FloriaGF
                 _batch = WindowGF.getBatch(batch_name);
                 _id = _batch.addSprite(this);
             }
+            /// <summary>
+            /// Создаст спрайт с растяжением 1, 1, 1
+            /// </summary>
+            /// <param name="x">X - координата</param>
+            /// <param name="y">Y - координата</param>
+            /// <param name="z">Z - координата</param>
+            /// <param name="animation">Анимация для спрайта</param>
+            /// <param name="batch_name">Имя Batch</param>
             public Sprite(float x, float y, float z, Animation animation, string batch_name) : this(x, y, z, 1, 1, 1, animation, batch_name) { }
+            /// <summary>
+            /// Создаст спрайт с растяжением 1, 1, 1
+            /// </summary>
+            /// <param name="pos">Vec(3) - координаты для спрайта</param>
+            /// <param name="animation">Анимация для спрайта</param>
+            /// <param name="batch_name">Имя Batch</param>
             public Sprite(Vec pos, Animation animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
             ~Sprite()
             {
@@ -639,21 +692,53 @@ namespace FloriaGF
                 _points_cache = null;
                 if (_batch != null) _batch.updatePoints(this.id);
             }
+            /// <summary>
+            /// Изменить позицию
+            /// </summary>
+            /// <param name="update_points">Обновить точки спрайта у Batch</param>
             public void setPosition(float x, float y, float z, bool update_points = true)
             {
-                _translate = new Vec([x, y, z]);
+                this.setPosition(new Vec(x, y, z), update_points);
+            }
+            /// <summary>
+            /// Изменить позицию
+            /// </summary>
+            /// <param name="pos">Vec(3)</param>
+            /// <param name="update_points">Обновить точки спрайта у Batch</param>
+            public void setPosition(Vec pos, bool update_points = true)
+            {
+                _translate = pos;
                 if (update_points) this._updatePoints();
             }
+            /// <summary>
+            /// Изменить растяжение
+            /// </summary>
+            /// <param name="update_points">Обновить точки спрайта у Batch</param>
             public void setScale(float xs, float ys, float zs, bool update_points = true)
             {
-                _scale = new Vec([xs, ys, zs]);
+                this.setScale(new Vec(xs, ys, zs), update_points);
+            }
+            /// <summary>
+            /// Изменить растяжение
+            /// </summary>
+            /// <param name="scale">Vec(3)</param>
+            /// <param name="update_points">Обновить точки спрайта у Batch</param>
+            public void setScale(Vec scale, bool update_points = true)
+            {
+                _scale = scale;
                 if (update_points) this._updatePoints();
             }
+            /// <summary>
+            /// Изменить анимацию
+            /// </summary>
             public void setAnimation(Animation animation)
             {
-                _animation = animation.Clone() as Animation ?? throw new Exception();
+                _animation = animation.Clone();
                 if (_batch != null) _batch.updateAnimations();
             }
+            /// <summary>
+            /// Симулировать спрайт, нужен для воспроизведении анимации
+            /// </summary>
             public void simulation()
             {
                 var nt = TimeGF.time();
@@ -732,7 +817,7 @@ namespace FloriaGF
 
                             //translate
                             _points_cache[i] += _translate.x;
-                            _points_cache[i+1] += _translate.y - _translate.z * 0.5f;
+                            _points_cache[i+1] += _translate.y;
                             _points_cache[i+2] += _translate.z;
                         }
                     }
@@ -755,197 +840,20 @@ namespace FloriaGF
                 }
             }
         }
-    
-        class Color
-        {
-            byte[] _data;
-            
 
-            public Color(byte[] data)
-            {
-                if (data.Length != 4) throw new Exception("Invalid data");
-                _data = data;
-            }
-            public Color(byte r, byte g, byte b, byte a) : this([r, g, b, a]) { }
-
-
-            public byte R
-            {
-                get { return _data[0]; }
-            }
-            public byte G
-            {
-                get { return _data[1]; }
-            }
-            public byte B
-            {
-                get { return _data[2]; }
-            }
-            public byte A
-            {
-                get { return _data[3]; }
-            }
-            public byte this[int index]
-            {
-                get { return this._data[index]; }
-            }
-
-
-            public static implicit operator byte[](Color color)
-            {
-                return color._data;
-            }
-            public static implicit operator Color(byte[] data)
-            {
-                return new Color(data);
-            }
-        }
-
-        class Image
-        {
-            byte[] _pixels;
-            uint _width, 
-                 _height;
-
-            public Image()
-            {
-                _width = 0;
-                _height = 0;
-                _pixels = [];
-            }
-            public Image(uint width, uint height, byte[]? pixels = null)
-            {
-                _width = width;
-                _height = height;
-
-                if (pixels == null)
-                    _pixels = new byte[width * height * 4];
-                else
-                    _pixels = pixels;
-            }
-            public Image(uint width, uint height, Color color) : this(width, height) 
-            {
-                List<byte> data = new();
-                for (int i = 0; i < width * height; i++)
-                    data.AddRange((byte[])color);
-
-                _pixels = [..data];
-            }
-            public Image(string path)
-            {
-                this.load(path);
-            }
-
-            public void load(string path)
-            {
-                List<byte> pixels = [];
-
-                using (var image_data = SixLabors.ImageSharp.Image.Load<Rgba32>(path))
-                {
-                    _width = (uint)image_data.Width;
-                    _height = (uint)image_data.Height;
-
-                    for (int y = 0; y < _height; y++)
-                        for (int x = 0; x < _width; x++)
-                        {
-                            Rgba32 pixel = image_data[x, y];
-                            pixels.AddRange([pixel.R, pixel.G, pixel.B, pixel.A]);
-                        }
-                }
-                _pixels = pixels.ToArray();
-            }
-            public void paste(Image img, int xc, int yc)
-            {
-                for (int y = 0; y < img.Height; y++)
-                    for (int x = 0; x < img.Width; x++)
-                    {
-                        int px = Math.Max(Math.Min(x + xc, this.Width), 0),
-                            py = Math.Max(Math.Min(y + yc, this.Height), 0);
-
-                        this.setPixel(px, py, img.getPixel(x, y));
-                    }
-            }
-            public void save(string path)
-            {
-                if (Width == 0 || Height == 0) return;
-
-                var simg = new SixLabors.ImageSharp.Image<Rgba32>(Width, Height);
-
-                for (int y = 0; y < Height; y++)
-                    for (int x = 0; x < Width; x++)
-                    {
-                        Color color = getPixel(x, y);
-                        simg[x, y] = new Rgba32(color.R, color.G, color.B, color.A);
-                    }
-
-                simg.Save(path);
-            }
-            public byte[] getPixel(int x, int y)
-            {
-                return new ArraySegment<byte>(_pixels, this.Width * 4 * y + x * 4, 4).ToArray();
-            }
-            public void setPixel(int x, int y, Color color)
-            {
-                for (int i = 0; i < 4; i++)
-                    _pixels[this.Width * 4 * y  + x * 4 + i] = color[i];
-            }
-            public void fill(int x1, int y1, int x2, int y2, Color color)
-            {
-                for (int x = 0; x < x2-x1; x++)
-                    for (int y = 0; y < y2-y1; y++)
-                        this.setPixel(x1 + x, y1 + y, color);
-            }
-
-
-            public int Width
-            {
-                get { return (int)_width; }
-            }
-            public int Height
-            {
-                get { return (int)_height; }
-            }
-            public byte[] Pixels
-            {
-                get { return _pixels; }
-            }
-
-
-            public static implicit operator Image(DotGLFW.Image img)
-            {
-                return new Image((uint)img.Width, (uint)img.Height, img.Pixels);
-            }
-            public static implicit operator DotGLFW.Image(Image img)
-            {
-                var rimg = new DotGLFW.Image();
-                rimg.Width = img.Width;
-                rimg.Height = img.Height;
-                rimg.Pixels = img.Pixels;
-
-                return rimg;
-            }
-        }
-    
-        class AnimationInfo
-        {
-            public string name;
-            public uint count_frames, delay;
-            public bool loop;
-            public AnimationInfo(string name, uint count_frames, uint delay, bool loop)
-            {
-                this.name = name;
-                this.count_frames = count_frames;
-                this.delay = delay;
-                this.loop = loop;
-            }
-        }
-
-        class Animation : ICloneable
+        /// <summary>
+        /// Анимация для спрайтов
+        /// </summary>
+        class Animation
         {
             string _name;
             uint _count_frames, _currect_frame, _frame_width, _frame_height, _delay;
             bool _loop;
 
+            /// <param name="name">Название картинки из ImagesFG</param>
+            /// <param name="count_frames">Количество кадров</param>
+            /// <param name="delay">Задержка в мс</param>
+            /// <param name="loop">Зацикленность</param>
             public Animation(string name, uint count_frames, uint delay, bool loop) 
             {
                 _name = name;
@@ -959,7 +867,6 @@ namespace FloriaGF
                 _frame_height = (uint)img.Height;
             }
 
-
             public void nextFrame()
             {
                 if (!(_currect_frame < _count_frames && _loop)) return;
@@ -970,7 +877,9 @@ namespace FloriaGF
                     _currect_frame = 0;
             }
 
-
+            /// <summary>
+            /// Получить float(4) координаты пикселей текущего кадра
+            /// </summary>
             public uint[] frame_position
             {
                 get
@@ -1023,7 +932,7 @@ namespace FloriaGF
                     return _delay;
                 }
             }
-            public object Clone() 
+            public Animation Clone() 
             {
                 return new Animation(_name, _count_frames, _delay, _loop);
             } 

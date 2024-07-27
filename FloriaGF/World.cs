@@ -6,6 +6,9 @@ using static DotGL.GL;
 
 namespace FloriaGF
 {
+    /// <summary>
+    /// Базовый интерфейс объекта для World
+    /// </summary>
     interface BaseObjectInterface
     {
 
@@ -18,6 +21,14 @@ namespace FloriaGF
         public bool collided { get; }*/
     }
 
+    /// <summary>
+    /// Базовый класс для объектов.
+    /// 
+    /// Установи поле _simulated = true, если вам нужна симуляция объекта
+    /// 
+    /// Перезапиши:
+    ///     - метод setPosition, если вам нужно отслеживать изменение позиции
+    /// </summary>
     class BaseObject : BaseObjectInterface
     {
         uint _id;
@@ -50,11 +61,20 @@ namespace FloriaGF
                 _id = value;
             }
         }
+        
+        /// <summary>
+        /// Vec(3)
+        /// </summary>
         public Vec position
         {
             get
             {
                 return _position.Copy();
+            }
+            set
+            {
+                if (value.Length != 3) throw new Exception();
+                this.setPosition(value);
             }
         }
         public float x
@@ -92,43 +112,8 @@ namespace FloriaGF
         }
         public bool simulated { get { return _simulated; } }
     }
-    class Camera : BaseObject
-    {
-        public Camera(Vec pos) : base(pos) { }
-
-        public override void setPosition(Vec pos)
-        {
-            base.setPosition(pos);
-            WindowGF.camera_position = pos;
-        }
-
-        public float scale
-        {
-            get
-            {
-                return WindowGF.camera_scale;
-            }
-            set
-            {
-                WindowGF.camera_scale = value;
-            }
-        }
-    }
-
-    class ObjSprite : BaseObject
-    {
-        Sprite _sprite;
-        public ObjSprite(Vec pos, Animation animation, string batch_name) : base(pos)
-        {
-            _sprite = new Sprite(pos, animation, batch_name);
-        }
-        public override void setPosition(Vec pos)
-        {
-            base.setPosition(pos);
-            _sprite.position = this.position;
-        }
-    }
-
+    
+   
     static class World
     {
         static IDM<BaseObjectInterface> _objects = new(true);

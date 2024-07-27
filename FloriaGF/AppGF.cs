@@ -52,11 +52,20 @@ namespace FloriaGF
             return 0;
         }
 
+        public static void sayHello()
+        {
+            Log.write("hello!");
+        }
+
         public static void init()
         {
             Profile.load();
             WindowGF.init(854, 480, "FloriaGameFramework");
-            
+            WindowGF.createBatch("background");
+            WindowGF.createBatch("objects");
+            WindowGF.createBatch("topground");
+            WindowGF.createBatch("ui");
+
             if (WindowGF.window != null)
                 KeysGF.init(WindowGF.window);
 
@@ -66,6 +75,8 @@ namespace FloriaGF
             ImagesGF.loadImage("numbers", "data/images/numbers.png");
             ImagesGF.loadImage("test_anim", "data/images/test_anim.png");
             ImagesGF.loadImage("test_anim2", "data/images/test_anim2.png");
+
+            KeysGF.regFunction(Key.W, InputState.Press, 0, sayHello);
 
             Log.write("APP", "initialized");
         }
@@ -88,11 +99,11 @@ namespace FloriaGF
         public static void simulation()
         {
 
-            var batch = new Batch("test");
+            //var batch = new Batch("test");
 
             var anim = new Animation("test_anim", 2, 500, true);
 
-            var spriteobject = new ObjSprite(new Vec(0, 0, 0), anim, batch.name);
+            var spriteobject = new SpriteObject(new Vec(0, 0, 0), anim, "objects");
 
             var camera = new Camera(new Vec(0, 0, 0));
             camera.scale = 100;
@@ -107,8 +118,8 @@ namespace FloriaGF
                     World.simulation();
                     WindowGF.simulationBatches();
 
-                    camera.x = (float)(Math.Sin(TimeGF.time() * 0.002));
-                    spriteobject.y = (float)(Math.Sin(TimeGF.time() * 0.001));
+                    //camera.x = (float)(Math.Sin(TimeGF.time() * 0.002));
+                    //spriteobject.y = (float)(Math.Sin(TimeGF.time() * 0.001));
 
                     _count_sps++;
                 }

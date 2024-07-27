@@ -17,7 +17,10 @@ namespace FloriaGF
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllText(path, value);
         }
-
+        /// <summary>
+        /// Сериализовать Объект в xml-файла
+        /// </summary>
+        /// <typeparam name="T">Тип data, все методы и поля должны быть публичными</typeparam>
         static public void save<T>(string path, T data)
         {
             using (var fs = new FileStream(path, FileMode.Create))
@@ -25,7 +28,9 @@ namespace FloriaGF
                 new XmlSerializer(typeof(T)).Serialize(fs, data);
             }
         }
-
+        /// <summary>
+        /// Десериализовать Объект из xml-файла
+        /// </summary>
         static public object? load<T>(string path)
         {
             using (var fs = new FileStream(path, FileMode.Open))
@@ -33,7 +38,6 @@ namespace FloriaGF
                 return new XmlSerializer(typeof(T)).Deserialize(fs);
             }
         }
-
 
         public static bool checkFile(string path)
         {

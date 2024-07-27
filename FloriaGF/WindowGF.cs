@@ -6,6 +6,9 @@ using static DotGL.GL;
 
 namespace FloriaGF
 {
+    /// <summary>
+    /// Менеджер окна
+    /// </summary>
     static class WindowGF
     {
         static Window _window;
@@ -92,6 +95,10 @@ namespace FloriaGF
             WindowGF._update_camera = true;
             WindowGF._batches[name] = batch;
         }
+        public static void createBatch(string name)
+        {
+            new Batch(name);
+        }
         public static void deleteBatch(string name)
         {
             WindowGF._batches.Remove(name);
@@ -111,9 +118,10 @@ namespace FloriaGF
         }
 
         /// <summary>
-        /// 0 - nosync
-        /// 1 - sync 
-        /// 2 - sync / 2
+        /// Буферизация окна:
+        /// 0 - nosync;
+        /// 1 - sync;
+        /// 2 - sync / 2;
         /// </summary>
         public static void setInetval(int value)
         {
@@ -149,7 +157,9 @@ namespace FloriaGF
                 batch.simulationSprites();
         }
 
-
+        /// <summary>
+        /// Vec(3) Позиция камеры
+        /// </summary>
         public static float[] camera_position
         {
             get
@@ -164,6 +174,9 @@ namespace FloriaGF
                 WindowGF._updateCamera();
             }
         }
+        /// <summary>
+        /// float(2) Разрешение камеры
+        /// </summary>
         public static float[] camera_resolution 
         { 
             get
@@ -178,6 +191,9 @@ namespace FloriaGF
                 WindowGF._updateCamera();
             }
         }
+        /// <summary>
+        /// Приближение камеры
+        /// </summary>
         public static float camera_scale 
         { 
             get
