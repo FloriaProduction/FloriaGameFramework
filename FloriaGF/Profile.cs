@@ -11,6 +11,7 @@ namespace FloriaGF
         static int _sync = 0;
         static uint _fps = 120;
         static uint _sps = 120;
+        static bool _show_fps = false;
 
         public static bool fullscreen
         {
@@ -46,7 +47,17 @@ namespace FloriaGF
                 _sps = value;
             }
         }
-
+        public static bool show_fps
+        {
+            get
+            {
+                return _show_fps;
+            }
+            set
+            {
+                _show_fps = value;
+            }
+        }
 
         public static Dictionary<string, object> settings
         {
@@ -61,10 +72,9 @@ namespace FloriaGF
 
         public static void save()
         {
-
-            FileGF.saveJson("settings.json", new Dictionary<object, object>
-            {
-                { "fullscreen", Profile.fullscreen },
+            FileGF.saveJson("settings.json", new object[][] {
+                ["fullscreen", Profile.fullscreen],
+                ["show_fps", Profile.show_fps],
             });
 
             Log.write("saved", "PROFILE");
@@ -78,13 +88,32 @@ namespace FloriaGF
                 return;
             }
 
-            JsonElement settings = FileGF.readJson("settings.json");
+            try
+            {
+                JsonElement settings = FileGF.readJson("settings.json");
 
+                foreach (var keyval in settings.EnumerateArray())
+                {
+                    JsonElement value = keyval[1];
 
-            _fullscreen = settings.GetProperty("fullscreen").GetBoolean();
+                    switch (keyval[0].GetString())
+                    {
+                        case "fullscreen":
+                            _fullscreen = value.GetBoolean();
+                            break;
+                        case "show_fps":
+                            _show_fps = value.GetBoolean();
+                            break;
+                    }
+                }
 
-
-            Log.write("loaded", "PROFILE");
+                Log.write("loaded", "PROFILE");
+            }
+            catch (Exception e)
+            {
+                Log.write(e, "profile");
+            }
+            
         }
     }
 }

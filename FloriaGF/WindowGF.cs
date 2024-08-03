@@ -104,10 +104,24 @@ namespace FloriaGF
         {
             WindowGF._batches.Remove(name);
         }
+        public static void deleteAllBatches()
+        {
+            WindowGF._batches.Clear();
+        }
         public static Batch getBatch(string name)
         {
             return WindowGF._batches[name];
         }
+        public static string[] getBatches()
+        {
+            return WindowGF._batches.Keys.ToArray();
+        }
+        public static void simulationBatches()
+        {
+            foreach (Batch batch in _batches.Values)
+                batch.simulationSprites();
+        }
+
         private static void _updateCamera()
         {
             foreach (Batch batch in _batches.Values)
@@ -157,11 +171,6 @@ namespace FloriaGF
             Profile.fullscreen = !Profile.fullscreen;
         }
 
-        public static void simulationBatches()
-        {
-            foreach (Batch batch in _batches.Values)
-                batch.simulationSprites();
-        }
 
         /// <summary>
         /// Vec(3) Позиция камеры

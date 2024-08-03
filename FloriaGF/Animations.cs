@@ -1,5 +1,6 @@
 ﻿using FloriaGF.Graphic;
 using System;
+using System.Text.Json;
 
 namespace FloriaGF
 {
@@ -140,6 +141,7 @@ namespace FloriaGF
         public static void create(Animation anim)
         {
             _animations[anim.name] = anim;
+            Log.write($"Animation '{anim.name}' created!", "AnimationManager");
         }
 
         public static Animation get(string name)
@@ -147,5 +149,35 @@ namespace FloriaGF
             return _animations[name];
         }
 
+        public static void loadAnimations(string animation_file)
+        {
+            JsonElement animations = FileGF.readJson(animation_file);
+            foreach (var animation in animations.EnumerateArray())
+            {
+                string name = animation.GetProperty("name").ToString();
+                string file = animation.GetProperty("file").ToString();
+                uint count = animation.GetProperty("count").GetUInt32();
+                uint delay = animation.GetProperty("delay").GetUInt32();
+                bool loop = animation.GetProperty("loop").GetBoolean();
+                int[] anchor;
+                if (animation.TryGetProperty("anchor", out JsonElement _anchor))
+                    anchor = (from number in _anchor.EnumerateArray() select number.GetInt32()).ToArray();
+                else
+                    anchor = [0, 0];
+                if (anchor.Length != 2)
+                    throw new Exception();
+
+                Dictionary<string, int[]> points = new();
+                if (animation.TryGetProperty("points", out JsonElement _points))
+                    foreach (var point in _points.EnumerateArray())
+                    {
+                        int[] value = (from number in point.GetProperty("anchor").EnumerateArray() select number.GetInt32()).ToArray();
+                        points[point.GetProperty("name").ToString()] = value;
+                    }
+                        
+                ImagesGF.loadImage(name, $"data/animations/{file}");
+                AnimationManager.create(new Animation(name, count, delay, loop, anchor, points));
+            }
+        }
     }
 }

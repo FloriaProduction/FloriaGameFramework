@@ -4,7 +4,7 @@ using System.ComponentModel.Design;
 
 namespace FloriaGF
 {
-    class Camera : BaseObject
+    public class Camera : BaseObject
     {
         string? _target = null;
         float _strength = 0.025f;
@@ -65,7 +65,7 @@ namespace FloriaGF
     }
     
 
-    class SpriteObject : BaseObject
+    public class SpriteObject : BaseObject
     {
         Sprite _sprite;
         public SpriteObject(Pos pos, Animation animation, string batch_name) : base(pos)
@@ -89,7 +89,7 @@ namespace FloriaGF
         }
     }
 
-    class MovedObject : SpriteObject
+    public class MovedObject : SpriteObject
     {
         int[] _direction = [0, 0];
         float _max_speed = 0.05f;

@@ -195,10 +195,16 @@ namespace FloriaGF
         /// Загрузить картинку в память
         /// </summary>
         /// <param name="name">Уникальное имя</param>
-        public static void loadImage(string name, string path)
+        public static void loadImage(string name, string path, bool exists = true)
         {
-            if (_images.ContainsKey(name)) throw new Exception("Already exists");
+            if (_images.ContainsKey(name))
+            {
+                if (exists) throw new Exception("Already exists");
+                else return;
+            }
+                
             _images[name] = getImage(path);
+            Log.write($"Image '{name}'({path}) loaded", "Images");
         }
         /// <summary>
         /// Получить картинку из памяти

@@ -32,7 +32,7 @@ namespace FloriaGF
         /// <summary>
         /// Вывести StackTrace Ошибки
         /// </summary>
-        public static void write(Exception e)
+        public static void write(Exception e, string? from = null)
         {
             string message = "ERROR!";
             message += $"\n    Message: {e.Message}";
@@ -44,7 +44,7 @@ namespace FloriaGF
                 message += $"\n    File: {Path.GetFileName(frame.GetFileName())}; Line: {frame.GetFileLineNumber()}; Method: {frame.GetMethod()}";
             }
 
-            write(message);
+            write(message, from);
         }
 
         /// <summary>

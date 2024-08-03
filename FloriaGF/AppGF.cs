@@ -69,27 +69,9 @@ namespace FloriaGF
             if (WindowGF.window != null)
                 KeysGF.init(WindowGF.window);
 
-            ImagesGF.loadImage("test", "data/images/test.png");
-            ImagesGF.loadImage("test2", "data/images/test2.png");
-            ImagesGF.loadImage("icon128_2", "data/images/icon128_2.png");
-            ImagesGF.loadImage("numbers", "data/images/numbers.png");
-            ImagesGF.loadImage("test_anim", "data/images/test_anim.png");
-            ImagesGF.loadImage("test_anim2", "data/images/test_anim2.png");
 
+            AnimationManager.loadAnimations("data/animations/animations.json");
 
-            AnimationManager.create(new Animation("test", 1, 0, false));
-            AnimationManager.create(new Animation(
-                "test2", 
-                1, 
-                0, 
-                false, 
-                [16, 32], 
-                new Dictionary<string, int[]>
-                {
-                    { "camera", [0, -32] }
-                }
-            ));
-            AnimationManager.create(new Animation("test_anim", 2, 500, true, [16, 32]));
 
             // events
 
@@ -138,12 +120,12 @@ namespace FloriaGF
             var spriteobject3 = new SpriteObject(new Pos(1f, 0, -2), AnimationManager.get("test_anim"), "objects");
 
 
-            var mobject = new MovedObject(new Pos(0, 0, 0));
+            var mobject = new MovedObject(new Pos(2, 0, 0));
 
             var camera = new Camera(new Pos(0, 0, 0));
             camera.scale = 100;
             camera.setTarget(mobject.uid);
-
+            camera.setPosition(mobject.position);
 
             while (!Glfw.WindowShouldClose(WindowGF.window))
             {
@@ -165,7 +147,7 @@ namespace FloriaGF
                 }
 
                 //show_info
-                if (TimeGF.every("show_info", 1000))
+                if (Profile.show_fps && TimeGF.every("show_info", 1000))
                 {
                     Log.write($"fps: {count_fps} (~{(double)1 / count_fps:f4}), sps: {count_sps} (~{(double)1 / count_sps:f4})", "app");
                     _count_sps = _count_fps = 0;
@@ -179,11 +161,11 @@ namespace FloriaGF
             KeysGF.input_type = "world";
             World.saved = true;
 
-            var anim = new Animation("test_anim", 2, 500, true);
-
-            var sprite_obj = new SpriteObject(new Pos(0, 0, 0), anim, "objects");
+            //var sprite_obj = new SpriteObject(new Pos(0, 0, 0), anim, "objects");
 
             World.saveLevel("test");
+
+            World.loadLevel("test");
         }
 
         public static uint count_sps

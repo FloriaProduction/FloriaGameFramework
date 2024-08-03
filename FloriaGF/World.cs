@@ -10,7 +10,7 @@ namespace FloriaGF
     /// <summary>
     /// Базовый интерфейс объекта для World
     /// </summary>
-    interface BaseObjectInterface
+    public interface BaseObjectInterface
     {
 
         public void simulation();
@@ -31,7 +31,7 @@ namespace FloriaGF
     /// Перезапиши:
     ///     - метод setPosition, если вам нужно отслеживать изменение позиции
     /// </summary>
-    class BaseObject : BaseObjectInterface
+    public class BaseObject : BaseObjectInterface
     {
         uint _id;
         string _uid;
@@ -125,7 +125,7 @@ namespace FloriaGF
     }
     
    
-    static class World
+    public static class World
     {
         static IDM<BaseObjectInterface> _objects = new(true);
         static bool _update_groups = false;
@@ -206,6 +206,11 @@ namespace FloriaGF
                 KeysGF.input_type = settings.GetProperty("input_type").ToString();
                 Log.write($"input type: {KeysGF.input_type}");
 
+                WindowGF.deleteAllBatches();
+                foreach (var batch_name in settings.GetProperty("batches").EnumerateArray())
+                    WindowGF.createBatch(batch_name.ToString());
+                Log.write($"batches: {string.Join(", ", settings.GetProperty("batches").EnumerateArray())}");
+
                 Log.write("loading complete!", "world");
             }
             catch (Exception e)
@@ -225,6 +230,7 @@ namespace FloriaGF
             Dictionary<object, object> settings = new();
             settings["saved"] = _saved;
             settings["input_type"] = KeysGF.input_type;
+            settings["batches"] = WindowGF.getBatches();
 
             FileGF.saveJson($"data/levels/{name}/settings.json", settings);
 

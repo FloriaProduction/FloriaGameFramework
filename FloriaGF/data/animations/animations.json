@@ -1,0 +1,24 @@
+[
+    {
+        "name": "test_anim",
+        "file": "test_anim.png",
+        "count": 2,
+        "delay": 500,
+        "loop": true,
+        "anchor": [16, 32]
+    },
+    {
+        "name": "test2",
+        "file": "test2.png",
+        "count": 1,
+        "delay": 0,
+        "loop": false,
+        "anchor": [16, 32],
+        "points": [
+            {
+                "name": "camera",
+                "anchor": [0, -32]
+            }
+        ]
+    }
+]

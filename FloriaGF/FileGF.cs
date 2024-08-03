@@ -53,7 +53,7 @@ namespace FloriaGF
             return JsonDocument.Parse(readFile(path)).RootElement;
         }
 
-        public static void saveJson(string path, Dictionary<object, object> data, bool indented = true)
+        public static void saveJson(string path, object data, bool indented = true)
         {
             FileGF.writeFile(
                 path, 
