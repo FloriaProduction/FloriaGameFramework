@@ -1,4 +1,5 @@
 ﻿//#define DISABLE_ERROR
+//#define CREATE_LEVEL
 
 using System;
 using DotGLFW;
@@ -16,8 +17,8 @@ namespace FloriaGF
 
         static ulong _start_time = TimeGF.time();
 
-        public static int Main()
-        {
+
+        public static int Main() {
 
 #if DISABLE_ERROR
             try
@@ -25,8 +26,12 @@ namespace FloriaGF
                 try
                 {
 #endif
-            AppGF.init();
+                    AppGF.init();
+#if CREATE_LEVEL
+                    AppGF.createLevel();
+#else
                     AppGF.simulation();
+#endif
 
 #if DISABLE_ERROR
                 }
@@ -38,7 +43,7 @@ namespace FloriaGF
                 finally
                 {
 #endif
-                    AppGF.term();
+            AppGF.term();
 #if DISABLE_ERROR
                 }
             }
@@ -50,11 +55,6 @@ namespace FloriaGF
 #endif
 
             return 0;
-        }
-
-        public static void sayHello()
-        {
-            Log.write("hello!");
         }
 
         public static void init()
@@ -76,9 +76,42 @@ namespace FloriaGF
             ImagesGF.loadImage("test_anim", "data/images/test_anim.png");
             ImagesGF.loadImage("test_anim2", "data/images/test_anim2.png");
 
-            KeysGF.regFunction(Key.W, InputState.Press, 0, sayHello);
 
-            Log.write("APP", "initialized");
+            AnimationManager.create(new Animation("test", 1, 0, false));
+            AnimationManager.create(new Animation(
+                "test2", 
+                1, 
+                0, 
+                false, 
+                [16, 32], 
+                new Dictionary<string, int[]>
+                {
+                    { "camera", [0, -32] }
+                }
+            ));
+            AnimationManager.create(new Animation("test_anim", 2, 500, true, [16, 32]));
+
+            // events
+
+            KeysGF.createEvent("+move_forward", "world", Key.W, InputState.Press);
+            KeysGF.createEvent("-move_forward", "world", Key.W, InputState.Release);
+
+            KeysGF.createEvent("+move_left", "world", Key.A, InputState.Press);
+            KeysGF.createEvent("-move_left", "world", Key.A, InputState.Release);
+
+            KeysGF.createEvent("+move_back", "world", Key.S, InputState.Press);
+            KeysGF.createEvent("-move_back", "world", Key.S, InputState.Release);
+
+            KeysGF.createEvent("+move_right", "world", Key.D, InputState.Press);
+            KeysGF.createEvent("-move_right", "world", Key.D, InputState.Release);
+
+            KeysGF.createEvent("toggle_fullscreen", "world", Key.F11, InputState.Press);
+
+            // binds
+
+            KeysGF.bind("toggle_fullscreen", WindowGF.toggleFullscreen);
+
+            Log.write("initialized", "APP");
         }
 
         public static void term()
@@ -86,27 +119,30 @@ namespace FloriaGF
             WindowGF.term();
             Profile.save();
 
-            Log.write("APP", "terminated");
+            Log.write("terminated", "APP");
             Log.save();
         }
 
         public static void close()
         {
             AppGF._app_enable = false;
-            Log.write("app", "closing...");
+            Log.write("closing...", "app");
         }
 
         public static void simulation()
         {
+            WindowGF.camera_scale = 1;
 
-            //var batch = new Batch("test");
+            var spriteobject1 = new SpriteObject(new Pos(0, 0, 0), AnimationManager.get("test_anim"), "objects");
+            var spriteobject2 = new SpriteObject(new Pos(0.5f, 0, -1), AnimationManager.get("test_anim"), "objects");
+            var spriteobject3 = new SpriteObject(new Pos(1f, 0, -2), AnimationManager.get("test_anim"), "objects");
 
-            var anim = new Animation("test_anim", 2, 500, true);
 
-            var spriteobject = new SpriteObject(new Vec(0, 0, 0), anim, "objects");
+            var mobject = new MovedObject(new Pos(0, 0, 0));
 
-            var camera = new Camera(new Vec(0, 0, 0));
+            var camera = new Camera(new Pos(0, 0, 0));
             camera.scale = 100;
+            camera.setTarget(mobject.uid);
 
 
             while (!Glfw.WindowShouldClose(WindowGF.window))
@@ -117,9 +153,6 @@ namespace FloriaGF
                     Glfw.PollEvents();
                     World.simulation();
                     WindowGF.simulationBatches();
-
-                    //camera.x = (float)(Math.Sin(TimeGF.time() * 0.002));
-                    //spriteobject.y = (float)(Math.Sin(TimeGF.time() * 0.001));
 
                     _count_sps++;
                 }
@@ -134,11 +167,23 @@ namespace FloriaGF
                 //show_info
                 if (TimeGF.every("show_info", 1000))
                 {
-                    Log.write("app", $"fps: {count_fps} (~{(double)1 / count_fps:f4}), sps: {count_sps} (~{(double)1 / count_sps:f4})");
+                    Log.write($"fps: {count_fps} (~{(double)1 / count_fps:f4}), sps: {count_sps} (~{(double)1 / count_sps:f4})", "app");
                     _count_sps = _count_fps = 0;
                 }
             }
             AppGF.close();
+        }
+
+        public static void createLevel()
+        {
+            KeysGF.input_type = "world";
+            World.saved = true;
+
+            var anim = new Animation("test_anim", 2, 500, true);
+
+            var sprite_obj = new SpriteObject(new Pos(0, 0, 0), anim, "objects");
+
+            World.saveLevel("test");
         }
 
         public static uint count_sps

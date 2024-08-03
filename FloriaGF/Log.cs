@@ -19,24 +19,14 @@ namespace FloriaGF
         /// Вывести лог
         /// </summary>
         /// <param name="message">Сообщение</param>
-        public static void write(string message)
+        public static void write(string message, string? from = null)
         {
             string now = DateTime.Now.ToLongTimeString();
 
             if (_save_logs)
                 _logs.Add($"[{now}] {message}");
             if (_enable_logs)
-                Console.WriteLine($"[{now}] {message}");
-        }
-
-        /// <summary>
-        /// Вывести лог
-        /// </summary>
-        /// <param name="name">От кого</param>
-        /// <param name="message">Сообщение</param>
-        public static void write(string name, string message) 
-        {
-            write($"{name.ToUpper()}: {message}");
+                Console.WriteLine($"[{now}]{(from != null ? $" [ {from.ToUpper()} ]" : "")}: {message}");
         }
 
         /// <summary>

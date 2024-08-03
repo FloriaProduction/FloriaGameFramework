@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using DotGLFW;
 using static DotGL.GL;
 
@@ -26,7 +27,7 @@ namespace FloriaGF
             set
             {
                 _sync = value;
-                WindowGF.setInetval(_sync);
+                WindowGF.setInterval(_sync);
             }
         }
         public static uint fps
@@ -54,54 +55,36 @@ namespace FloriaGF
                 return new Dictionary<string, object>
                 {
                     { "fullscreen",  fullscreen },
-                    { "sync", sync },
-                    { "fps", fps },
                 };
             }
         }
 
         public static void save()
         {
-            Dictionary<string, object> settings = Profile.settings;
-            List<object[]> settings_list = [];
 
-            foreach (string key in settings.Keys)
-                settings_list.Add([key, settings[key]]);
+            FileGF.saveJson("settings.json", new Dictionary<object, object>
+            {
+                { "fullscreen", Profile.fullscreen },
+            });
 
-            FileGF.save("settings.xml", settings_list.ToArray());
-
-            Log.write("PROFILE", "saved");
+            Log.write("saved", "PROFILE");
         }
 
         public static void load()
         {
-            if (!FileGF.checkFile("settings.xml"))
+            if (!FileGF.checkFile("settings.json"))
             {
-                Log.write("PROFILE", "load default settings");
+                Log.write("load default settings", "PROFILE");
                 return;
             }
 
-            var settings_list = FileGF.load<object[][]>("settings.xml") as object[][] ?? throw new Exception("Cannot load profile settings!");
-            foreach (object[] pair in settings_list)
-            {
-                string key = pair[0] as string ?? throw new Exception("Cannot convert to string");
-                object value = pair[1];
+            JsonElement settings = FileGF.readJson("settings.json");
 
-                switch (key)
-                {
-                    case "fullscreen":
-                        _fullscreen = Convert.ToBoolean(value);
-                        break;
-                    case "sync":
-                        _sync = Convert.ToInt32(value);
-                        break;
-                    case "fps":
-                        _fps = Convert.ToUInt32(value);
-                        break;
-                }
-            }
 
-            Log.write("PROFILE", "loaded");
+            _fullscreen = settings.GetProperty("fullscreen").GetBoolean();
+
+
+            Log.write("loaded", "PROFILE");
         }
     }
 }

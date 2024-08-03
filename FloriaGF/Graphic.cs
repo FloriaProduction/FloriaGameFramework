@@ -13,7 +13,7 @@ namespace FloriaGF
         /// <summary>
         /// Класс шейдера OpenGL
         /// </summary>
-        class ShaderOpenGL
+        public class ShaderOpenGL
         {
             uint _id = 0;
             int _shader_type;
@@ -68,7 +68,7 @@ namespace FloriaGF
         /// <summary>
         /// Шейдерная программа OpenGL
         /// </summary>
-        class ShaderProgramOpenGL
+        public class ShaderProgramOpenGL
         {
             uint _id = 0;
             ShaderOpenGL _vertex_shader;
@@ -209,7 +209,7 @@ namespace FloriaGF
         /// <summary>
         /// vertex buffer object - проще говоря массив данных
         /// </summary>
-        class VBO
+        public class VBO
         {
             uint _id;
             int _usage;
@@ -263,7 +263,7 @@ namespace FloriaGF
         /// <summary>
         /// vertex attrib object - совокупность vbo с настройками
         /// </summary>
-        class VAO
+        public class VAO
         {
             uint _id;
 
@@ -302,7 +302,7 @@ namespace FloriaGF
         /// <summary>
         /// Текстура
         /// </summary>
-        class Texture
+        public class Texture
         {
             uint _id;
             
@@ -349,7 +349,7 @@ namespace FloriaGF
         /// <summary>
         /// Используется для пакетной отрисовки множества спрайтов
         /// </summary>
-        class Batch
+        public class Batch
         {
             VBO _points, _tex_coords;
             VAO _vao;
@@ -366,7 +366,7 @@ namespace FloriaGF
             Dictionary<string, uint[]> _animation_map = new();
             uint _tex_width, _tex_height;
 
-            Vec _position = new(0, 0, 0), 
+            Pos _position = new(0, 0, 0), 
                 _scale = new(1, 1, 1);
 
             bool _update_all = false;
@@ -577,7 +577,7 @@ namespace FloriaGF
             /// <summary>
             /// Vec(3) Глобальная позиция для Batch, изменения затронут все Спрайты в этом Batch
             /// </summary>
-            public Vec position
+            public Pos position
             {
                 get
                 {
@@ -585,7 +585,6 @@ namespace FloriaGF
                 }
                 set
                 {
-                    if (value.Length != 3) throw new Exception();
                     _position = value;
                     _program.setUniform("camera_position", [value[0], value[1], value[2]]);
                 }
@@ -593,7 +592,7 @@ namespace FloriaGF
             /// <summary>
             /// Vec(3) Глобальное растяжение для Batch, изменения затронут все Спрайты в этом Batch
             /// </summary>
-            public Vec scale
+            public Pos scale
             {
                 get
                 {
@@ -601,7 +600,6 @@ namespace FloriaGF
                 }
                 set
                 {
-                    if (value.Length != 3) throw new Exception();
                     _scale = value;
                     _program.setUniform("camera_scale", [value[0], value[1], value[2]]);
                 }
@@ -619,7 +617,7 @@ namespace FloriaGF
         /// <summary>
         /// Простой интерфейс объектов для Batch
         /// </summary>
-        interface BatchObject
+        public interface BatchObject
         {
             public uint id { get; }
             public float[] points { get; }
@@ -631,15 +629,15 @@ namespace FloriaGF
         /// <summary>
         /// Спрайт
         /// </summary>
-        class Sprite : BatchObject
+        public class Sprite : BatchObject
         {
             static Vec _points = new([1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0]);
             float[]? _points_cache;
 
             uint _id;
 
-            Vec _translate;
-            Vec _scale;
+            Pos _translate;
+            Pos _scale;
 
             Batch? _batch;
 
@@ -680,7 +678,7 @@ namespace FloriaGF
             /// <param name="pos">Vec(3) - координаты для спрайта</param>
             /// <param name="animation">Анимация для спрайта</param>
             /// <param name="batch_name">Имя Batch</param>
-            public Sprite(Vec pos, Animation animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
+            public Sprite(Pos pos, Animation animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
             ~Sprite()
             {
                 _batch.removeSprite(this.id);
@@ -698,14 +696,14 @@ namespace FloriaGF
             /// <param name="update_points">Обновить точки спрайта у Batch</param>
             public void setPosition(float x, float y, float z, bool update_points = true)
             {
-                this.setPosition(new Vec(x, y, z), update_points);
+                this.setPosition(new Pos(x, y, z), update_points);
             }
             /// <summary>
             /// Изменить позицию
             /// </summary>
             /// <param name="pos">Vec(3)</param>
             /// <param name="update_points">Обновить точки спрайта у Batch</param>
-            public void setPosition(Vec pos, bool update_points = true)
+            public void setPosition(Pos pos, bool update_points = true)
             {
                 _translate = pos;
                 if (update_points) this._updatePoints();
@@ -716,14 +714,14 @@ namespace FloriaGF
             /// <param name="update_points">Обновить точки спрайта у Batch</param>
             public void setScale(float xs, float ys, float zs, bool update_points = true)
             {
-                this.setScale(new Vec(xs, ys, zs), update_points);
+                this.setScale(new Pos(xs, ys, zs), update_points);
             }
             /// <summary>
             /// Изменить растяжение
             /// </summary>
             /// <param name="scale">Vec(3)</param>
             /// <param name="update_points">Обновить точки спрайта у Batch</param>
-            public void setScale(Vec scale, bool update_points = true)
+            public void setScale(Pos scale, bool update_points = true)
             {
                 _scale = scale;
                 if (update_points) this._updatePoints();
@@ -806,10 +804,15 @@ namespace FloriaGF
                 {
                     if (_points_cache == null)
                     {
-                        _points_cache = _points.Copy();
+                        _points_cache = _points.ToArray();
+
+                        int[] anchor = _animation.anchor;
 
                         for (int i = 0; i < _points_cache.Length; i += 3)
                         {
+                            _points_cache[i] -= (float)anchor[0]/32;
+                            _points_cache[i+1] -= (float)anchor[1]/32;
+
                             //scale
                             _points_cache[i] *= _scale.x;
                             _points_cache[i+1] *= _scale.y;
@@ -844,98 +847,6 @@ namespace FloriaGF
         /// <summary>
         /// Анимация для спрайтов
         /// </summary>
-        class Animation
-        {
-            string _name;
-            uint _count_frames, _currect_frame, _frame_width, _frame_height, _delay;
-            bool _loop;
-
-            /// <param name="name">Название картинки из ImagesFG</param>
-            /// <param name="count_frames">Количество кадров</param>
-            /// <param name="delay">Задержка в мс</param>
-            /// <param name="loop">Зацикленность</param>
-            public Animation(string name, uint count_frames, uint delay, bool loop) 
-            {
-                _name = name;
-                _count_frames = count_frames;
-                _delay = delay; 
-                _loop = loop;
-                _currect_frame = 0;
-
-                var img = ImagesGF.getCacheImage(name);
-                _frame_width = (uint)img.Width / _count_frames;
-                _frame_height = (uint)img.Height;
-            }
-
-            public void nextFrame()
-            {
-                if (!(_currect_frame < _count_frames && _loop)) return;
-
-                _currect_frame++;
-
-                if (_currect_frame >= _count_frames)
-                    _currect_frame = 0;
-            }
-
-            /// <summary>
-            /// Получить float(4) координаты пикселей текущего кадра
-            /// </summary>
-            public uint[] frame_position
-            {
-                get
-                {
-                    return [
-                        _currect_frame * _frame_width,
-                        0,
-                        _currect_frame * _frame_width + _frame_width,
-                        _frame_height
-                    ];
-                }
-            }
-            public string name
-            {
-                get
-                {
-                    return _name;
-                }
-            }
-            public uint count_frames
-            {
-                get
-                {
-                    return _count_frames;
-                }
-            }
-            public uint currect_frame
-            {
-                get
-                {
-                    return _currect_frame;
-                }
-                set
-                {
-                    if (value < 0 || value > _count_frames) throw new Exception();
-                    _currect_frame = value;
-                }
-            }
-            public bool loop
-            {
-                get
-                {
-                    return _loop;
-                }
-            }
-            public uint delay
-            {
-                get
-                {
-                    return _delay;
-                }
-            }
-            public Animation Clone() 
-            {
-                return new Animation(_name, _count_frames, _delay, _loop);
-            } 
-        }
+        
     }
 }

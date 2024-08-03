@@ -15,14 +15,13 @@ namespace FloriaGF
         static Vidmode _screen;
         static DotGLFW.Monitor _monitor;
 
-        static Vec _camera_position = new Vec(0, 0, 0);
-        static Vec _camera_resolution = new Vec(1, 1);
+        static Pos _camera_position = new Pos(0, 0, 0);
+        static float[] _camera_resolution = [1, 1];
         static float _camera_scale = 1;
 
-        static Dictionary<string, Graphic.Batch> _batches = new();
+        static Dictionary<string, Batch> _batches = new();
 
         static bool _update_camera = false;
-
 
         public static void init(uint width, uint height, string title)
         {
@@ -70,11 +69,13 @@ namespace FloriaGF
 
             WindowGF.setFullscreen(Profile.fullscreen);
 
-            Log.write("WINDOW", "initialized");
+            WindowGF._update_camera = true;
+
+            Log.write("initialized", "WINDOW");
         }
         public static void term()
         {
-            Log.write("WINDOW", "terminated");
+            Log.write("terminated", "WINDOW");
         }
         public static void render()
         {
@@ -112,8 +113,8 @@ namespace FloriaGF
             foreach (Batch batch in _batches.Values)
             {
                 batch.position = WindowGF._camera_position;
-                batch.scale = new Vec(1 / WindowGF.camera_resolution[0], 1 / WindowGF.camera_resolution[1], 1) 
-                    * new Vec(WindowGF._camera_scale, WindowGF._camera_scale, WindowGF._camera_scale);
+                batch.scale = new Pos(1 / WindowGF.camera_resolution[0], 1 / WindowGF.camera_resolution[1], 1) 
+                            * new Pos(WindowGF._camera_scale, WindowGF._camera_scale, WindowGF._camera_scale);
             }
         }
 
@@ -123,7 +124,7 @@ namespace FloriaGF
         /// 1 - sync;
         /// 2 - sync / 2;
         /// </summary>
-        public static void setInetval(int value)
+        public static void setInterval(int value)
         {
             Glfw.SwapInterval(value);
         }
@@ -148,7 +149,12 @@ namespace FloriaGF
                 value ? screen.Width : (int)camera_resolution[0], 
                 value ? screen.Height : (int)camera_resolution[1]
             );
-            setInetval(Profile.sync);
+            setInterval(Profile.sync);
+        }
+
+        public static void toggleFullscreen()
+        {
+            Profile.fullscreen = !Profile.fullscreen;
         }
 
         public static void simulationBatches()
@@ -160,7 +166,7 @@ namespace FloriaGF
         /// <summary>
         /// Vec(3) Позиция камеры
         /// </summary>
-        public static float[] camera_position
+        public static Pos camera_position
         {
             get
             {
@@ -170,7 +176,7 @@ namespace FloriaGF
             {
                 if (value.Length != 3) throw new Exception();
 
-                WindowGF._camera_position = new Vec(value[0], value[1], value[2]);
+                WindowGF._camera_position = value;
                 WindowGF._updateCamera();
             }
         }
@@ -187,7 +193,7 @@ namespace FloriaGF
             {
                 if (value.Length != 2) throw new Exception();
 
-                WindowGF._camera_resolution = new Vec(value);
+                WindowGF._camera_resolution = value;
                 WindowGF._updateCamera();
             }
         }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Text.Json;
 using DotGLFW;
 using static DotGL.GL;
 using System.Xml.Serialization;
+using System.Xml.Linq;
 
 namespace FloriaGF
 {
@@ -13,8 +15,10 @@ namespace FloriaGF
         }
 
         public static void writeFile(string path, string value) 
-        {  
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+        {
+            string? directory = Path.GetDirectoryName(path);
+            if (directory != null && directory.Length > 0)
+                Directory.CreateDirectory(directory);
             File.WriteAllText(path, value);
         }
         /// <summary>
@@ -42,6 +46,23 @@ namespace FloriaGF
         public static bool checkFile(string path)
         {
             return File.Exists(path);
+        }
+    
+        public static JsonElement readJson(string path)
+        {
+            return JsonDocument.Parse(readFile(path)).RootElement;
+        }
+
+        public static void saveJson(string path, Dictionary<object, object> data, bool indented = true)
+        {
+            FileGF.writeFile(
+                path, 
+                JsonSerializer.Serialize(data, 
+                    new JsonSerializerOptions { 
+                        WriteIndented = indented 
+                    }
+                )
+            );
         }
     }
 }

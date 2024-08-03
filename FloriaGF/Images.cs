@@ -5,7 +5,7 @@ using SixLabors.ImageSharp;
 
 namespace FloriaGF
 {
-    class Color
+    public class Color
     {
         byte[] _data;
             
@@ -50,7 +50,7 @@ namespace FloriaGF
         }
     }
 
-    class Image
+    public class Image
     {
         byte[] _pixels;
         uint _width, 
@@ -187,7 +187,7 @@ namespace FloriaGF
     /// <summary>
     /// Менеджер картинок
     /// </summary>
-    static class ImagesGF
+    public static class ImagesGF
     {
         static Dictionary<string, Image> _images = new();
 
