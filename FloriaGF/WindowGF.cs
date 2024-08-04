@@ -17,7 +17,7 @@ namespace FloriaGF
 
         static Pos _camera_position = new Pos(0, 0, 0);
         static float[] _camera_resolution = [1, 1];
-        static float _camera_scale = 1;
+        static float _camera_scale = 100;
 
         static Dictionary<string, Batch> _batches = new();
 
@@ -106,6 +106,10 @@ namespace FloriaGF
         }
         public static void deleteAllBatches()
         {
+            foreach (string batch_name in _batches.Keys)
+            {
+                _batches[batch_name] = null;
+            }
             WindowGF._batches.Clear();
         }
         public static Batch getBatch(string name)

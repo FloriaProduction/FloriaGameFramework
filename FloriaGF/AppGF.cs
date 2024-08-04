@@ -57,6 +57,16 @@ namespace FloriaGF
             return 0;
         }
 
+        public static void zoomIn()
+        {
+            WindowGF.camera_scale *= 2;
+        }
+        public static void zoomOut()
+        {
+            WindowGF.camera_scale /= 2;
+        }
+
+
         public static void init()
         {
             Profile.load();
@@ -87,11 +97,27 @@ namespace FloriaGF
             KeysGF.createEvent("+move_right", "world", Key.D, InputState.Press);
             KeysGF.createEvent("-move_right", "world", Key.D, InputState.Release);
 
+            KeysGF.createEvent("+zoom", "world", Key.Up, InputState.Press);
+            KeysGF.createEvent("-zoom", "world", Key.Down, InputState.Press);
+
             KeysGF.createEvent("toggle_fullscreen", "world", Key.F11, InputState.Press);
 
             // binds
 
             KeysGF.bind("toggle_fullscreen", WindowGF.toggleFullscreen);
+            KeysGF.bind("+zoom", zoomIn);
+            KeysGF.bind("-zoom", zoomOut);
+
+            ClassManager.init();
+
+            /*Levels.init();
+
+            Levels.LoadLevel("test");
+            Levels.LoadLevel("test");*/
+
+#if !CREATE_LEVEL
+            World.loadLevel("main");
+#endif
 
             Log.write("initialized", "APP");
         }
@@ -113,19 +139,6 @@ namespace FloriaGF
 
         public static void simulation()
         {
-            WindowGF.camera_scale = 1;
-
-            var spriteobject1 = new SpriteObject(new Pos(0, 0, 0), AnimationManager.get("test_anim"), "objects");
-            var spriteobject2 = new SpriteObject(new Pos(0.5f, 0, -1), AnimationManager.get("test_anim"), "objects");
-            var spriteobject3 = new SpriteObject(new Pos(1f, 0, -2), AnimationManager.get("test_anim"), "objects");
-
-
-            var mobject = new MovedObject(new Pos(2, 0, 0));
-
-            var camera = new Camera(new Pos(0, 0, 0));
-            camera.scale = 100;
-            camera.setTarget(mobject.uid);
-            camera.setPosition(mobject.position);
 
             while (!Glfw.WindowShouldClose(WindowGF.window))
             {
@@ -158,14 +171,28 @@ namespace FloriaGF
 
         public static void createLevel()
         {
-            KeysGF.input_type = "world";
-            World.saved = true;
+            string[] level_names = ["main"];
 
-            //var sprite_obj = new SpriteObject(new Pos(0, 0, 0), anim, "objects");
+            foreach (string level_name in level_names)
+            {
+                World.Clear();
+                switch (level_name)
+                {
+                    case "main":
+                        KeysGF.input_type = "world";
+                        World.saved = true;
 
-            World.saveLevel("test");
+                        var camera = new Camera();
 
-            World.loadLevel("test");
+                        var moved_object = new MovedObject(new Pos(10, 0, 0));
+                        camera.setTarget(moved_object);
+
+                        var sprite_object = new SpriteObject(new Pos(5, 0, 0), AnimationManager.get("test_anim"), "objects");
+                        break;
+                }
+
+                World.saveLevel(level_name);
+            }
         }
 
         public static uint count_sps

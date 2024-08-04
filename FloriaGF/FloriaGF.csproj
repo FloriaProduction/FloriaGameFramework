@@ -65,6 +65,9 @@
     <None Update="data\animations\animations.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="data\animations\default.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="data\animations\icon128.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

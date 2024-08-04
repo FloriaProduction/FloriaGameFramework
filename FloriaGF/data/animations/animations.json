@@ -20,5 +20,13 @@
                 "anchor": [0, -32]
             }
         ]
+    },
+    {
+        "name": "default",
+        "file": "default.png",
+        "count": 1,
+        "delay": 0,
+        "loop": false,
+        "anchor": [16, 32]
     }
 ]

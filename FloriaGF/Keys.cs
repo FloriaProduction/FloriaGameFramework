@@ -61,7 +61,7 @@ namespace FloriaGF
 
             uint func_id = _events[event_name].add(func);
 
-            Log.write($"bind on '{event_name}' registered!", "keys");
+            //Log.write($"bind on '{event_name}' registered!", "keys");
 
             return func_id;
         }
@@ -85,7 +85,7 @@ namespace FloriaGF
             else
                 _events_map[input_mode][event_key].add(name);
 
-            Log.write($"event '{name}' created!", "keys");
+            //Log.write($"event '{name}' created!", "keys");
         }
 
         static void keyHandler(Window window, DotGLFW.Key _key, int scancode, InputState _action, ModifierKey _mods)

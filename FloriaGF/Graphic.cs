@@ -49,7 +49,7 @@ namespace FloriaGF
             }
             public void delete()
             {
-                glDeleteShader(this.id);
+                //glDeleteShader(this.id);
             }
             public uint id
             {
@@ -98,8 +98,8 @@ namespace FloriaGF
 
             public void delete()
             {
-                glDeleteProgram(this.id);
-                this._id = 0;
+                //glDeleteProgram(this.id);
+                //this._id = 0;
             }
 
             public ShaderProgramOpenGL(ShaderOpenGL vertex_shader, ShaderOpenGL fragment_shader, bool compile = true)
@@ -224,7 +224,7 @@ namespace FloriaGF
             }
             ~VBO () 
             {
-                glDeleteBuffers(this.id);
+                //glDeleteBuffers(this.id);
             }
 
             /// <summary>
@@ -273,7 +273,7 @@ namespace FloriaGF
             }
             ~VAO()
             {
-                glDeleteVertexArrays(this.id);
+                //glDeleteVertexArrays(this.id);
             }
             /// <summary>
             /// Включить vbo в vao
@@ -325,7 +325,7 @@ namespace FloriaGF
             }
             ~Texture()
             {
-                glDeleteTextures(this._id);
+                //glDeleteTextures(this._id);
             }
             /// <summary>
             /// Обновление происходит для всей текстуры
@@ -428,7 +428,7 @@ namespace FloriaGF
                 List<string> animation_names = [];
                 foreach (Sprite sprite in _sprites.Values)
                 {
-                    if (sprite.animation.name != null && animation_names.IndexOf(sprite.animation.name) == -1)
+                    if (sprite.animation != null && sprite.animation.name != null && animation_names.IndexOf(sprite.animation.name) == -1)
                         animation_names.Add(sprite.animation.name);
                 }
 
@@ -621,8 +621,9 @@ namespace FloriaGF
         {
             public uint id { get; }
             public float[] points { get; }
-            public Animation animation { get; }
+            public Animation? animation { get; }
             public uint[] indices { get; }
+            public string? batch_name { get; }
             public void simulation();
         } 
         
@@ -641,7 +642,7 @@ namespace FloriaGF
 
             Batch? _batch;
 
-            Animation _animation;
+            Animation? _animation;
             ulong _animation_last_change;
             /// <param name="x">X - координата</param>
             /// <param name="y">Y - координата</param>
@@ -651,7 +652,7 @@ namespace FloriaGF
             /// <param name="zs">Z - растяжение</param>
             /// <param name="animation">Анимация для спрайта</param>
             /// <param name="batch_name">Имя Batch</param>
-            public Sprite(float x, float y, float z, float xs, float ys, float zs, Animation animation, string batch_name)
+            public Sprite(float x, float y, float z, float xs, float ys, float zs, Animation? animation, string batch_name)
             {
                 this.setPosition(x, y, z, false);
                 this.setScale(xs, ys, zs, false);
@@ -671,17 +672,17 @@ namespace FloriaGF
             /// <param name="z">Z - координата</param>
             /// <param name="animation">Анимация для спрайта</param>
             /// <param name="batch_name">Имя Batch</param>
-            public Sprite(float x, float y, float z, Animation animation, string batch_name) : this(x, y, z, 1, 1, 1, animation, batch_name) { }
+            public Sprite(float x, float y, float z, Animation? animation, string batch_name) : this(x, y, z, 1, 1, 1, animation, batch_name) { }
             /// <summary>
             /// Создаст спрайт с растяжением 1, 1, 1
             /// </summary>
             /// <param name="pos">Vec(3) - координаты для спрайта</param>
             /// <param name="animation">Анимация для спрайта</param>
             /// <param name="batch_name">Имя Batch</param>
-            public Sprite(Pos pos, Animation animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
+            public Sprite(Pos pos, Animation? animation, string batch_name) : this(pos.x, pos.y, pos.z, animation, batch_name) { }
             ~Sprite()
             {
-                _batch.removeSprite(this.id);
+                if (_batch != null) _batch.removeSprite(this.id);
             }
 
 
@@ -729,9 +730,10 @@ namespace FloriaGF
             /// <summary>
             /// Изменить анимацию
             /// </summary>
-            public void setAnimation(Animation animation)
+            public void setAnimation(Animation? animation)
             {
-                _animation = animation.Clone();
+                _animation = animation == null ? null : animation.Clone();
+                
                 if (_batch != null) _batch.updateAnimations();
             }
             /// <summary>
@@ -739,9 +741,11 @@ namespace FloriaGF
             /// </summary>
             public void simulation()
             {
+                if (_animation == null) return;
+                
                 var nt = TimeGF.time();
 
-                if ((_animation_last_change + animation.delay > nt) || 
+                if ((_animation_last_change + _animation.delay > nt) || 
                     (_animation.currect_frame >= _animation.count_frames - 1 && !_animation.loop))
                     return;
 
@@ -806,7 +810,7 @@ namespace FloriaGF
                     {
                         _points_cache = _points.ToArray();
 
-                        int[] anchor = _animation.anchor;
+                        int[] anchor = _animation == null ? [0, 0] : _animation.anchor;
 
                         for (int i = 0; i < _points_cache.Length; i += 3)
                         {
@@ -835,11 +839,18 @@ namespace FloriaGF
                     return [0, 1, 3, 1, 2, 3];
                 }
             }
-            public Animation animation
+            public Animation? animation
             {
                 get
                 {
                     return _animation;
+                }
+            }
+            public string? batch_name
+            {
+                get
+                {
+                    return _batch == null ? null : _batch.name;
                 }
             }
         }

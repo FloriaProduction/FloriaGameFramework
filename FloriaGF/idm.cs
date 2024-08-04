@@ -105,7 +105,13 @@ namespace FloriaGF
 
             return (uint)_dict_count;
         }
-
+        public void Clear()
+        {
+            _counter = 0;
+            _dict.Clear();
+            _keys_cache = null;
+            _dict_count = null;
+        }
 
         public uint[] Keys
         {
